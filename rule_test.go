@@ -30,8 +30,8 @@ func TestNewRule(t *testing.T) {
 
 func TestNewRuleError(t *testing.T) {
 	_, err := NewRule(`path`)
-	if err == nil {
-		t.Fatalf("incorrect error: %v", err)
+	if err != ErrLeadingSlash {
+		t.Fatalf("unexpected error\nhave %v\nwant %v", err, ErrLeadingSlash)
 	}
 }
 
@@ -80,28 +80,35 @@ func TestCompileUnbound(t *testing.T) {
 	}
 
 	err = rule.compile()
-	if err == nil {
-		t.Errorf("rule.compile have %v, want %v", nil, err)
+	if err != ErrUnbound {
+		t.Errorf("rule.compile\nhave %v\nwant %v", err, ErrUnbound)
 	}
 }
 
-func TestCompileMalformed(t *testing.T) {
-}
+func TestCompileErrors(t *testing.T) {
+	var compileTests = []struct {
+		path string
+		err  error
+	}{
+		{`/<>`, ErrVariableEmpty},
+		{`/<foo`, ErrVariableOpen},
+		{`/<foo>/<foo>`, ErrVariableDuplicate},
+		{`/<foo:int(>`, ErrConverterOpen},
+		{`/<foo:int()>`, nil},
+		{`/<foo:int(digits)>`, ErrArguments},
+		{`/<foo:int(digits=)>`, ErrArguments},
+	}
 
-func TestCompileDuplicateName(t *testing.T) {
-}
-
-func TestCompileParamShort(t *testing.T) {
-}
-
-func TestCompileParamSurround(t *testing.T) {
-}
-
-func TestCompileConverterMalformed(t *testing.T) {
-}
-
-func TestCompileArgumentsMissing(t *testing.T) {
-}
-
-func TestCompileArgumentsMalformed(t *testing.T) {
+	router := New()
+	for i, tt := range compileTests {
+		rule, err := NewRule(tt.path)
+		if err != nil {
+			t.Errorf("%d. unexpected error: %v", i, err)
+			continue
+		}
+		err = rule.bind(router)
+		if err != tt.err {
+			t.Errorf("%d. rule.compile\nhave %v\nwant %v", i, err, tt.err)
+		}
+	}
 }

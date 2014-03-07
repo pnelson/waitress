@@ -20,16 +20,28 @@ type trace struct {
 	name  string
 }
 
+var (
+	ErrBound   = errors.New("rule already bound")
+	ErrUnbound = errors.New("rule not bound")
+
+	ErrLeadingSlash      = errors.New("rules must begin with a leading slash")
+	ErrVariableEmpty     = errors.New("variable must have a name")
+	ErrVariableOpen      = errors.New("must surround variable with '<' and '>'")
+	ErrVariableDuplicate = errors.New("duplicate variable name")
+	ErrConverterOpen     = errors.New("must surround converter with '(' and ')'")
+	ErrArguments         = errors.New("malformed key/value argument pairs")
+)
+
 func NewRule(path string) (*Rule, error) {
 	if path == "" || path[0] != '/' {
-		return nil, errors.New("rules must begin with a leading slash")
+		return nil, ErrLeadingSlash
 	}
 	return &Rule{path: path}, nil
 }
 
 func (r *Rule) bind(router *Router) error {
 	if r.router != nil {
-		return errors.New("rule already bound")
+		return ErrBound
 	}
 	r.router = router
 	return r.compile()
@@ -40,24 +52,25 @@ func (r *Rule) compile() error {
 	var names []string
 
 	if r.router == nil {
-		return errors.New("rule not bound")
+		return ErrUnbound
 	}
 
 	for _, segment := range splitPath(r.path) {
 		if segment[0] == '<' {
 			name, converter, err := r.parseParam(segment)
 			if err != nil {
-				return errors.New("malformed path")
+				return err
 			}
 
 			for _, v := range names {
 				if v == name {
-					return errors.New("duplicate variable name")
+					return ErrVariableDuplicate
 				}
 			}
 
 			part := fmt.Sprintf(`(?P<%s>%s)`, name, converter.Regexp())
 			parts = append(parts, part)
+			names = append(names, name)
 
 			r.trace = append(r.trace, trace{true, name})
 			r.weight += converter.Weight()
@@ -84,11 +97,11 @@ func (r *Rule) compile() error {
 //   <var:converter(arg1=val1,arg2=val2,argx=valx)>
 func (r *Rule) parseParam(param string) (string, Converter, error) {
 	if len(param) < 3 {
-		return "", nil, errors.New("param: too short to be valid")
+		return "", nil, ErrVariableEmpty
 	}
 
 	if param[0] != '<' || param[len(param)-1] != '>' {
-		return "", nil, errors.New("param: must surround with '<' and '>'")
+		return "", nil, ErrVariableOpen
 	}
 
 	param = param[1 : len(param)-1]
@@ -120,9 +133,13 @@ func (r *Rule) parseConverter(converter string) (string, map[string]string, erro
 	name := parts[0]
 	more := parts[1]
 
+	if more == "" {
+		return "", nil, ErrConverterOpen
+	}
+
 	last, arguments := more[len(more)-1], more[:len(more)-1]
 	if strings.Contains(more, "(") || last != ')' {
-		return "", nil, errors.New("malformed converter")
+		return "", nil, ErrConverterOpen
 	}
 
 	args, err := r.parseArguments(arguments)
@@ -134,16 +151,20 @@ func (r *Rule) parseConverter(converter string) (string, map[string]string, erro
 }
 
 func (r *Rule) parseArguments(arguments string) (map[string]string, error) {
-	if !strings.Contains(arguments, "=") {
-		return nil, errors.New("missing keyword arguments")
+	args := make(map[string]string)
+	if arguments == "" {
+		return args, nil
 	}
 
-	args := make(map[string]string)
+	if !strings.Contains(arguments, "=") {
+		return nil, ErrArguments
+	}
+
 	parts := strings.Split(arguments, ",")
 	for _, arg := range parts {
 		pair := strings.Split(arg, "=")
-		if len(pair) != 2 {
-			return nil, errors.New("malformed arguments")
+		if len(pair) != 2 || pair[1] == "" {
+			return nil, ErrArguments
 		}
 
 		key := pair[0]
