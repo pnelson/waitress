@@ -74,6 +74,15 @@ func TestCompile(t *testing.T) {
 }
 
 func TestCompileUnbound(t *testing.T) {
+	rule, err := NewRule(`/`)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	err = rule.compile()
+	if err == nil {
+		t.Errorf("rule.compile have %v, want %v", nil, err)
+	}
 }
 
 func TestCompileMalformed(t *testing.T) {
