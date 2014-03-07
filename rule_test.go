@@ -94,8 +94,8 @@ func TestCompileErrors(t *testing.T) {
 		{`/<foo`, ErrVariableOpen},
 		{`/<foo>/<foo>`, ErrVariableDuplicate},
 		{`/<foo:int(>`, ErrConverterOpen},
-		{`/<foo:int()>`, nil},
 		{`/<foo:int((>`, ErrConverterOpen},
+		{`/<foo:int()>`, nil},
 		{`/<foo:int(digits)>`, ErrArguments},
 		{`/<foo:int(digits=)>`, ErrArguments},
 	}
