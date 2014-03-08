@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-type args map[string]interface{}
+type ruleArgs map[string]interface{}
 
 func TestNewRule(t *testing.T) {
 	var newRuleTest = []string{
@@ -121,13 +121,13 @@ func TestMatch(t *testing.T) {
 	var matchTests = []struct {
 		rule string
 		path string
-		args args
+		args ruleArgs
 	}{
-		{`/`, "/", args{}},
-		{`/<foo>`, "/bar", args{"foo": "bar"}},
-		{`/<foo:int>`, "/4", args{"foo": 4}},
-		{`/<foo>/<bar>`, "/bar/baz", args{"foo": "bar", "bar": "baz"}},
-		{`/<foo>/bar`, "/foo/bar", args{"foo": "foo"}},
+		{`/`, "/", ruleArgs{}},
+		{`/<foo>`, "/bar", ruleArgs{"foo": "bar"}},
+		{`/<foo:int>`, "/4", ruleArgs{"foo": 4}},
+		{`/<foo>/<bar>`, "/bar/baz", ruleArgs{"foo": "bar", "bar": "baz"}},
+		{`/<foo>/bar`, "/foo/bar", ruleArgs{"foo": "foo"}},
 	}
 
 	router := New()
@@ -150,7 +150,7 @@ func TestMatch(t *testing.T) {
 			continue
 		}
 
-		if !reflect.DeepEqual(args, tt.args) {
+		if !reflect.DeepEqual(args, map[string]interface{}(tt.args)) {
 			t.Errorf("%d. rule.match(%q)\nhave %v\nwant %v", i, tt.path, args, tt.args)
 		}
 	}
