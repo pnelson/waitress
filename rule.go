@@ -23,7 +23,9 @@ type trace struct {
 var (
 	ErrBound   = errors.New("rule already bound")
 	ErrUnbound = errors.New("rule not bound")
+)
 
+var (
 	ErrLeadingSlash      = errors.New("rules must begin with a leading slash")
 	ErrVariableEmpty     = errors.New("variable must have a name")
 	ErrVariableOpen      = errors.New("must surround variable with '<' and '>'")
