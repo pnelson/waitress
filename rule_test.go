@@ -1,6 +1,7 @@
 package router
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -110,6 +111,45 @@ func TestCompileErrors(t *testing.T) {
 		err = rule.bind(router)
 		if err != tt.err {
 			t.Errorf("%d. rule.compile\nhave %v\nwant %v", i, err, tt.err)
+		}
+	}
+}
+
+func TestMatch(t *testing.T) {
+	var matchTests = []struct {
+		rule string
+		path string
+		args map[string]interface{}
+	}{
+		{`/`, "/", map[string]interface{}{}},
+		{`/<foo>`, "/bar", map[string]interface{}{"foo": "bar"}},
+		{`/<foo:int>`, "/4", map[string]interface{}{"foo": 4}},
+		{`/<foo>/<bar>`, "/bar/baz", map[string]interface{}{"foo": "bar", "bar": "baz"}},
+		{`/<foo>/bar`, "/foo/bar", map[string]interface{}{"foo": "foo"}},
+	}
+
+	router := New()
+	for i, tt := range matchTests {
+		rule, err := NewRule(tt.rule)
+		if err != nil {
+			t.Errorf("%d. unexpected error: %v", i, err)
+			continue
+		}
+
+		err = rule.bind(router)
+		if err != nil {
+			t.Errorf("%d. unexpected error: %v", i, err)
+			continue
+		}
+
+		args, err := rule.match(tt.path)
+		if err != nil {
+			t.Errorf("%d. unexpected error: %v", i, err)
+			continue
+		}
+
+		if !reflect.DeepEqual(args, tt.args) {
+			t.Errorf("%d. rule.match(%q)\nhave %v\nwant %v", i, tt.path, args, tt.args)
 		}
 	}
 }

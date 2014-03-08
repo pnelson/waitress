@@ -8,11 +8,12 @@ import (
 )
 
 type Rule struct {
-	router *Router
-	path   string
-	regexp *regexp.Regexp
-	trace  []trace
-	weight int
+	router     *Router
+	path       string
+	regexp     *regexp.Regexp
+	converters map[string]Converter
+	trace      []trace
+	weight     int
 }
 
 type trace struct {
@@ -38,7 +39,7 @@ func NewRule(path string) (*Rule, error) {
 	if path == "" || path[0] != '/' {
 		return nil, ErrLeadingSlash
 	}
-	return &Rule{path: path}, nil
+	return &Rule{path: path, converters: make(map[string]Converter)}, nil
 }
 
 func (r *Rule) bind(router *Router) error {
@@ -74,6 +75,7 @@ func (r *Rule) compile() error {
 			parts = append(parts, part)
 			names = append(names, name)
 
+			r.converters[name] = converter
 			r.trace = append(r.trace, trace{true, name})
 			r.weight += converter.Weight()
 
@@ -94,7 +96,26 @@ func (r *Rule) compile() error {
 }
 
 func (r *Rule) match(path string) (map[string]interface{}, error) {
-	return nil, nil
+	var err error
+	rv := make(map[string]interface{})
+
+	match := r.regexp.FindStringSubmatch(path)
+	if match == nil {
+		return nil, nil
+	}
+
+	for i, key := range r.regexp.SubexpNames() {
+		if i == 0 || key == "" {
+			continue
+		}
+
+		rv[key], err = r.converters[key].ToGo(match[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return rv, nil
 }
 
 // Valid parameters are in the form:
