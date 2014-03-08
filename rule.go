@@ -203,6 +203,14 @@ func (r *Rule) parseArguments(arguments string) (map[string]string, error) {
 	return args, nil
 }
 
+func (r *Rule) String() string {
+	bound := "unbound"
+	if r.router != nil {
+		bound = "bound"
+	}
+	return fmt.Sprintf("<Rule (%s) path:`%s`>", bound, r.path)
+}
+
 func splitPath(path string) []string {
 	parts := strings.Split(path, "/")
 	if parts[0] == "" {
@@ -212,12 +220,4 @@ func splitPath(path string) []string {
 		parts = parts[:len(parts)-1]
 	}
 	return parts
-}
-
-func (r *Rule) String() string {
-	bound := "unbound"
-	if r.router != nil {
-		bound = "bound"
-	}
-	return fmt.Sprintf("<Rule (%s) path:`%s`>", bound, r.path)
 }
