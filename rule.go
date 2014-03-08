@@ -11,6 +11,7 @@ type Rule struct {
 	router     *Router
 	path       string
 	regexp     *regexp.Regexp
+	arguments  []string
 	converters map[string]Converter
 	trace      []trace
 	weight     int
@@ -75,6 +76,7 @@ func (r *Rule) compile() error {
 			parts = append(parts, part)
 			names = append(names, name)
 
+			r.arguments = append(r.arguments, segment)
 			r.converters[name] = converter
 			r.trace = append(r.trace, trace{true, name})
 			r.weight += converter.Weight()
@@ -210,4 +212,12 @@ func splitPath(path string) []string {
 		parts = parts[:len(parts)-1]
 	}
 	return parts
+}
+
+func (r *Rule) String() string {
+	bound := "unbound"
+	if r.router != nil {
+		bound = "bound"
+	}
+	return fmt.Sprintf("<Rule (%s) path:`%s`>", bound, r.path)
 }
