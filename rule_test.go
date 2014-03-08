@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+type args map[string]interface{}
+
 func TestNewRule(t *testing.T) {
 	var newRuleTest = []string{
 		`/`,
@@ -119,13 +121,13 @@ func TestMatch(t *testing.T) {
 	var matchTests = []struct {
 		rule string
 		path string
-		args map[string]interface{}
+		args args
 	}{
-		{`/`, "/", map[string]interface{}{}},
-		{`/<foo>`, "/bar", map[string]interface{}{"foo": "bar"}},
-		{`/<foo:int>`, "/4", map[string]interface{}{"foo": 4}},
-		{`/<foo>/<bar>`, "/bar/baz", map[string]interface{}{"foo": "bar", "bar": "baz"}},
-		{`/<foo>/bar`, "/foo/bar", map[string]interface{}{"foo": "foo"}},
+		{`/`, "/", args{}},
+		{`/<foo>`, "/bar", args{"foo": "bar"}},
+		{`/<foo:int>`, "/4", args{"foo": 4}},
+		{`/<foo>/<bar>`, "/bar/baz", args{"foo": "bar", "bar": "baz"}},
+		{`/<foo>/bar`, "/foo/bar", args{"foo": "foo"}},
 	}
 
 	router := New()
