@@ -93,6 +93,10 @@ func (r *Rule) compile() error {
 	return nil
 }
 
+func (r *Rule) match(path string) (map[string]interface{}, error) {
+	return nil, nil
+}
+
 // Valid parameters are in the form:
 //   <var>
 //   <var:converter>
