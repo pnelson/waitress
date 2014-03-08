@@ -17,7 +17,7 @@ type Rule struct {
 
 type trace struct {
 	param bool
-	name  string
+	part  string
 }
 
 var (
