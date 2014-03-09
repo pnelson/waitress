@@ -8,82 +8,66 @@ type cargs map[string]string
 
 func TestStringConverter(t *testing.T) {
 	var stringConverterTests = []struct {
-		args        cargs
-		regexp      string
-		toGoParam   string
-		toGoResult  string
-		toUrlParam  string
-		toUrlResult string
+		args   cargs
+		regexp string
 	}{
-		{cargs{}, `[^/]{1,}`, "test", "test", "test", "test"},
-		{cargs{"minLength": "1"}, `[^/]{1,}`, "test", "test", "test", "test"},
-		{cargs{"minLength": "1", "maxLength": "4"}, `[^/]{1,4}`, "test", "test", "test", "test"},
-		{cargs{"minLength": "1", "maxLength": "2", "length": "4"}, `[^/]{4}`, "test", "test", "test", "test"},
+		{cargs{}, `[^/]{1,}`},
+		{cargs{"minLength": "1"}, `[^/]{1,}`},
+		{cargs{"minLength": "1", "maxLength": "4"}, `[^/]{1,4}`},
+		{cargs{"minLength": "1", "maxLength": "2", "length": "4"}, `[^/]{4}`},
 	}
 
 	for _, tt := range stringConverterTests {
 		c := NewStringConverter(tt.args)
+		str := "test"
 
 		if regexp := c.Regexp(); regexp != tt.regexp {
 			t.Errorf("StringConverter regexp expected `%v` but got `%v`",
 				tt.regexp, regexp)
 		}
 
-		toGoResult, err := c.ToGo(tt.toGoParam)
+		toGoResult, err := c.ToGo(str)
 		if err != nil {
-			t.Errorf("StringConverter ToGo(%q) unexpected error: %v",
-				tt.toGoParam, err)
+			t.Errorf("StringConverter ToGo(%q) unexpected error: %v", str, err)
 		}
-		if toGoResult != tt.toGoResult {
-			t.Errorf("StringConverter ToGo(%q) expected %q but got %q",
-				tt.toGoParam, tt.toGoResult, toGoResult)
+		if toGoResult != str {
+			t.Errorf("StringConverter ToGo(%q)\nhave %q\nwant %q", str, toGoResult, str)
 		}
 
-		toUrlResult, err := c.ToUrl(tt.toUrlParam)
+		toUrlResult, err := c.ToUrl(str)
 		if err != nil {
-			t.Errorf("StringConverter ToUrl(%q) unexpected error: %v",
-				tt.toUrlParam, err)
+			t.Errorf("StringConverter ToUrl(%q) unexpected error: %v", str, err)
 		}
-		if toUrlResult != tt.toUrlResult {
-			t.Errorf("StringConverter ToUrl(%q) expected %q but got %q",
-				tt.toUrlParam, tt.toUrlResult, toUrlResult)
+		if toUrlResult != str {
+			t.Errorf("StringConverter ToUrl(%q)\nhave %q\nwant %q", str, toUrlResult, str)
 		}
 	}
 }
 
 func TestPathConverter(t *testing.T) {
-	var pathConverterTests = []struct {
-		toGoParam   string
-		toGoResult  string
-		toUrlParam  string
-		toUrlResult string
-	}{
-		{"foo", "foo", "foo", "foo"},
-		{"foo/bar", "foo/bar", "foo/bar", "foo/bar"},
+	var pathConverterTests = []string{
+		"foo",
+		"foo/bar",
 	}
 
 	args := cargs{}
-	for _, tt := range pathConverterTests {
+	for _, path := range pathConverterTests {
 		c := NewPathConverter(args)
 
-		toGoResult, err := c.ToGo(tt.toGoParam)
+		toGoResult, err := c.ToGo(path)
 		if err != nil {
-			t.Errorf("PathConverter ToGo(%q) unexpected error: %v",
-				tt.toGoParam, err)
+			t.Errorf("PathConverter ToGo(%q) unexpected error: %v", path, err)
 		}
-		if toGoResult != tt.toGoResult {
-			t.Errorf("PathConverter ToGo(%q) expected %q but got %q",
-				tt.toGoParam, tt.toGoResult, toGoResult)
+		if toGoResult != path {
+			t.Errorf("PathConverter ToGo(%q)\nhave %q\nwant %q", path, toGoResult, path)
 		}
 
-		toUrlResult, err := c.ToUrl(tt.toUrlParam)
+		toUrlResult, err := c.ToUrl(path)
 		if err != nil {
-			t.Errorf("PathConverter ToUrl(%q) unexpected error: %v",
-				tt.toUrlParam, err)
+			t.Errorf("PathConverter ToUrl(%q) unexpected error: %v", path, err)
 		}
-		if toUrlResult != tt.toUrlResult {
-			t.Errorf("PathConverter ToUrl(%q) expected %q but got %q",
-				tt.toUrlParam, tt.toUrlResult, toUrlResult)
+		if toUrlResult != path {
+			t.Errorf("PathConverter ToUrl(%q)\nhave %q\nwant %q", path, toUrlResult, path)
 		}
 	}
 }
@@ -101,8 +85,7 @@ func TestPathConverterRegexp(t *testing.T) {
 	expectedRegexp := `[^/].*?`
 	c := NewPathConverter(args)
 	if regexp := c.Regexp(); regexp != expectedRegexp {
-		t.Errorf("PathConverter regexp expected `%v` but got `%v`",
-			expectedRegexp, regexp)
+		t.Errorf("PathConverter regexp\nhave `%v`\nwant `%v`", regexp, expectedRegexp)
 	}
 }
 
@@ -143,8 +126,7 @@ func TestIntConverter(t *testing.T) {
 		}
 
 		if regexp := c.Regexp(); regexp != tt.regexp {
-			t.Errorf("IntConverter regexp expected `%v` but got `%v`",
-				tt.regexp, regexp)
+			t.Errorf("IntConverter regexp\nhave `%v`\nwant `%v`", regexp, tt.regexp)
 		}
 
 		toGoResult, err := c.ToGo(tt.toGoParam)
@@ -153,8 +135,8 @@ func TestIntConverter(t *testing.T) {
 				tt.toGoParam, err)
 		}
 		if toGoResult != tt.toGoResult {
-			t.Errorf("IntConverter ToGo(%q) expected %v but got %v",
-				tt.toGoParam, tt.toGoResult, toGoResult)
+			t.Errorf("IntConverter ToGo(%q)\nhave %v\nwant %v",
+				tt.toGoParam, toGoResult, tt.toGoResult)
 		}
 
 		toUrlResult, err := c.ToUrl(tt.toUrlParam)
@@ -163,8 +145,8 @@ func TestIntConverter(t *testing.T) {
 				tt.toUrlParam, err)
 		}
 		if toUrlResult != tt.toUrlResult {
-			t.Errorf("IntConverter ToUrl(%v) expected %v but got %q",
-				tt.toUrlParam, tt.toUrlResult, toUrlResult)
+			t.Errorf("IntConverter ToUrl(%v)\nhave %v\nwant %v",
+				tt.toUrlParam, toUrlResult, tt.toUrlResult)
 		}
 	}
 }
