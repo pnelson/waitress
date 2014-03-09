@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+type args map[string]interface{}
+
 func TestNew(t *testing.T) {
 	r := New()
 	if r.Converters == nil {

@@ -36,6 +36,10 @@ var (
 	ErrArguments         = errors.New("malformed key/value argument pairs")
 )
 
+var (
+	ErrMatch = errors.New("path did not match rule")
+)
+
 func NewRule(path string) (*Rule, error) {
 	if path == "" || path[0] != '/' {
 		return nil, ErrLeadingSlash
@@ -103,7 +107,7 @@ func (r *Rule) match(path string) (map[string]interface{}, error) {
 
 	match := r.regexp.FindStringSubmatch(path)
 	if match == nil {
-		return nil, nil
+		return nil, ErrMatch
 	}
 
 	for i, key := range r.regexp.SubexpNames() {

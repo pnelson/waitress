@@ -4,21 +4,21 @@ import (
 	"testing"
 )
 
-type args map[string]string
+type cargs map[string]string
 
 func TestStringConverter(t *testing.T) {
 	var stringConverterTests = []struct {
-		args        args
+		args        cargs
 		regexp      string
 		toGoParam   string
 		toGoResult  string
 		toUrlParam  string
 		toUrlResult string
 	}{
-		{args{}, `[^/]{1,}`, "test", "test", "test", "test"},
-		{args{"minLength": "1"}, `[^/]{1,}`, "test", "test", "test", "test"},
-		{args{"minLength": "1", "maxLength": "4"}, `[^/]{1,4}`, "test", "test", "test", "test"},
-		{args{"minLength": "1", "maxLength": "2", "length": "4"}, `[^/]{4}`, "test", "test", "test", "test"},
+		{cargs{}, `[^/]{1,}`, "test", "test", "test", "test"},
+		{cargs{"minLength": "1"}, `[^/]{1,}`, "test", "test", "test", "test"},
+		{cargs{"minLength": "1", "maxLength": "4"}, `[^/]{1,4}`, "test", "test", "test", "test"},
+		{cargs{"minLength": "1", "maxLength": "2", "length": "4"}, `[^/]{4}`, "test", "test", "test", "test"},
 	}
 
 	for _, tt := range stringConverterTests {
@@ -62,7 +62,7 @@ func TestPathConverter(t *testing.T) {
 		{"foo/bar", "foo/bar", "foo/bar", "foo/bar"},
 	}
 
-	args := args{}
+	args := cargs{}
 	for _, tt := range pathConverterTests {
 		c := NewPathConverter(args)
 
@@ -89,7 +89,7 @@ func TestPathConverter(t *testing.T) {
 }
 
 func TestPathConverterNil(t *testing.T) {
-	args := args{"key": "value"}
+	args := cargs{"key": "value"}
 	c := NewPathConverter(args)
 	if c != nil {
 		t.Errorf("NewPathConverter(%v) = %v, want <nil>", args, c)
@@ -97,7 +97,7 @@ func TestPathConverterNil(t *testing.T) {
 }
 
 func TestPathConverterRegexp(t *testing.T) {
-	args := args{}
+	args := cargs{}
 	expectedRegexp := `[^/].*?`
 	c := NewPathConverter(args)
 	if regexp := c.Regexp(); regexp != expectedRegexp {
@@ -108,31 +108,31 @@ func TestPathConverterRegexp(t *testing.T) {
 
 func TestIntConverter(t *testing.T) {
 	var intConverterTests = []struct {
-		args        args
+		args        cargs
 		regexp      string
 		toGoParam   string
 		toGoResult  int
 		toUrlParam  int
 		toUrlResult string
 	}{
-		{args{}, `\d+`, "4", 4, 4, "4"},
-		{args{"digits": "2"}, `\d+`, "44", 44, 44, "44"},
-		{args{"digits": "2"}, `\d+`, "04", 4, 4, "04"},
-		{args{"digits": "2"}, `\d+`, "4", -1, 4, "04"},
-		{args{"min": "3"}, `\d+`, "4", 4, 4, "4"},
-		{args{"min": "4"}, `\d+`, "4", 4, 4, "4"},
-		{args{"min": "5"}, `\d+`, "4", -1, 4, "4"},
-		{args{"max": "5"}, `\d+`, "4", 4, 4, "4"},
-		{args{"max": "4"}, `\d+`, "4", 4, 4, "4"},
-		{args{"max": "3"}, `\d+`, "4", -1, 4, "4"},
-		{args{"min": "3", "max": "5"}, `\d+`, "4", 4, 4, "4"},
-		{args{"min": "4", "max": "5"}, `\d+`, "4", 4, 4, "4"},
-		{args{"min": "5", "max": "5"}, `\d+`, "4", -1, 4, "4"},
-		{args{"min": "3", "max": "5"}, `\d+`, "4", 4, 4, "4"},
-		{args{"min": "3", "max": "4"}, `\d+`, "4", 4, 4, "4"},
-		{args{"min": "3", "max": "3"}, `\d+`, "4", -1, 4, "4"},
-		{args{"digits": "2", "min": "3", "max": "4"}, `\d+`, "04", 4, 4, "04"},
-		{args{"digits": "2", "min": "3", "max": "4"}, `\d+`, "05", -1, 5, "05"},
+		{cargs{}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"digits": "2"}, `\d+`, "44", 44, 44, "44"},
+		{cargs{"digits": "2"}, `\d+`, "04", 4, 4, "04"},
+		{cargs{"digits": "2"}, `\d+`, "4", -1, 4, "04"},
+		{cargs{"min": "3"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "4"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "5"}, `\d+`, "4", -1, 4, "4"},
+		{cargs{"max": "5"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"max": "4"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"max": "3"}, `\d+`, "4", -1, 4, "4"},
+		{cargs{"min": "3", "max": "5"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "4", "max": "5"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "5", "max": "5"}, `\d+`, "4", -1, 4, "4"},
+		{cargs{"min": "3", "max": "5"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "3", "max": "4"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "3", "max": "3"}, `\d+`, "4", -1, 4, "4"},
+		{cargs{"digits": "2", "min": "3", "max": "4"}, `\d+`, "04", 4, 4, "04"},
+		{cargs{"digits": "2", "min": "3", "max": "4"}, `\d+`, "05", -1, 5, "05"},
 	}
 
 	for _, tt := range intConverterTests {
