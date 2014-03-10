@@ -6,7 +6,37 @@ import (
 
 type cargs map[string]string
 
-func TestStringConverter(t *testing.T) {
+func TestBaseConverter(t *testing.T) {
+	var baseConverterTests = []string{
+		"foo",
+		"bar",
+		"foo/bar",
+	}
+
+	for i, str := range baseConverterTests {
+		c := &BaseConverter{}
+
+		toGoResult, err := c.ToGo(str)
+		if err != nil {
+			t.Errorf("%d. BaseConverter ToGo(%q) unexpected error: %v", i, str, err)
+		}
+		if toGoResult != str {
+			t.Errorf("%d. BaseConverter ToGo(%q)\nhave %q\nwant %q",
+				i, str, toGoResult, str)
+		}
+
+		toUrlResult, err := c.ToUrl(str)
+		if err != nil {
+			t.Errorf("%d. BaseConverter ToUrl(%q) unexpected error: %v", i, str, err)
+		}
+		if toUrlResult != str {
+			t.Errorf("%d. BaseConverter ToUrl(%q)\nhave %q\nwant %q",
+				i, str, toUrlResult, str)
+		}
+	}
+}
+
+func TestNewStringConverter(t *testing.T) {
 	var stringConverterTests = []struct {
 		args   cargs
 		regexp string
@@ -21,77 +51,31 @@ func TestStringConverter(t *testing.T) {
 
 	for i, tt := range stringConverterTests {
 		c := NewStringConverter(tt.args)
-		str := "test"
-
 		if regexp := c.Regexp(); regexp != tt.regexp {
-			t.Errorf("%d. StringConverter(%v) regexp\nhave `%s`\nwant `%v`",
+			t.Errorf("%d. NewStringConverter(%v) regexp\nhave `%s`\nwant `%v`",
 				i, tt.args, regexp, tt.regexp)
 		}
-
-		toGoResult, err := c.ToGo(str)
-		if err != nil {
-			t.Errorf("StringConverter ToGo(%q) unexpected error: %v", str, err)
-		}
-		if toGoResult != str {
-			t.Errorf("StringConverter ToGo(%q)\nhave %q\nwant %q", str, toGoResult, str)
-		}
-
-		toUrlResult, err := c.ToUrl(str)
-		if err != nil {
-			t.Errorf("StringConverter ToUrl(%q) unexpected error: %v", str, err)
-		}
-		if toUrlResult != str {
-			t.Errorf("StringConverter ToUrl(%q)\nhave %q\nwant %q", str, toUrlResult, str)
-		}
 	}
 }
 
-func TestPathConverter(t *testing.T) {
-	var pathConverterTests = []string{
-		"foo",
-		"foo/bar",
-	}
+func TestNewPathConverter(t *testing.T) {
+	var pathConverterRegexp = `[^/].*?`
 
-	args := cargs{}
-	for _, path := range pathConverterTests {
-		c := NewPathConverter(args)
-
-		toGoResult, err := c.ToGo(path)
-		if err != nil {
-			t.Errorf("PathConverter ToGo(%q) unexpected error: %v", path, err)
-		}
-		if toGoResult != path {
-			t.Errorf("PathConverter ToGo(%q)\nhave %q\nwant %q", path, toGoResult, path)
-		}
-
-		toUrlResult, err := c.ToUrl(path)
-		if err != nil {
-			t.Errorf("PathConverter ToUrl(%q) unexpected error: %v", path, err)
-		}
-		if toUrlResult != path {
-			t.Errorf("PathConverter ToUrl(%q)\nhave %q\nwant %q", path, toUrlResult, path)
-		}
-	}
-}
-
-func TestPathConverterNil(t *testing.T) {
 	args := cargs{"key": "value"}
 	c := NewPathConverter(args)
 	if c != nil {
 		t.Errorf("NewPathConverter(%v) = %v, want <nil>", args, c)
 	}
-}
 
-func TestPathConverterRegexp(t *testing.T) {
-	args := cargs{}
-	expectedRegexp := `[^/].*?`
-	c := NewPathConverter(args)
-	if regexp := c.Regexp(); regexp != expectedRegexp {
-		t.Errorf("PathConverter regexp\nhave `%v`\nwant `%v`", regexp, expectedRegexp)
+	args = cargs{}
+	c = NewPathConverter(args)
+	if regexp := c.Regexp(); regexp != pathConverterRegexp {
+		t.Errorf("NewPathConverter regexp\nhave `%v`\nwant `%v`",
+			regexp, pathConverterRegexp)
 	}
 }
 
-func TestAnyConverter(t *testing.T) {
+func TestNewAnyConverter(t *testing.T) {
 	var anyConverterTests = []struct {
 		args   cargs
 		regexp string
@@ -110,7 +94,7 @@ func TestAnyConverter(t *testing.T) {
 	}
 }
 
-func TestAnyConverterNil(t *testing.T) {
+func TestNewAnyConverterNil(t *testing.T) {
 	var anyConverterTests = []cargs{
 		cargs{},
 		cargs{"items": ""},
