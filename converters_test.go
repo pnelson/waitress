@@ -13,17 +13,19 @@ func TestStringConverter(t *testing.T) {
 	}{
 		{cargs{}, `[^/]{1,}`},
 		{cargs{"minLength": "1"}, `[^/]{1,}`},
+		{cargs{"minLength": "2"}, `[^/]{2,}`},
 		{cargs{"minLength": "1", "maxLength": "4"}, `[^/]{1,4}`},
+		{cargs{"minLength": "2", "maxLength": "4"}, `[^/]{2,4}`},
 		{cargs{"minLength": "1", "maxLength": "2", "length": "4"}, `[^/]{4}`},
 	}
 
-	for _, tt := range stringConverterTests {
+	for i, tt := range stringConverterTests {
 		c := NewStringConverter(tt.args)
 		str := "test"
 
 		if regexp := c.Regexp(); regexp != tt.regexp {
-			t.Errorf("StringConverter regexp expected `%v` but got `%v`",
-				tt.regexp, regexp)
+			t.Errorf("%d. StringConverter(%v) regexp\nhave `%s`\nwant `%v`",
+				i, tt.args, regexp, tt.regexp)
 		}
 
 		toGoResult, err := c.ToGo(str)
