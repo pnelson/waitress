@@ -10,6 +10,7 @@ import (
 type Rule struct {
 	router     *Router
 	path       string
+	methods    []string
 	regexp     *regexp.Regexp
 	arguments  []string
 	converters map[string]Converter
@@ -40,11 +41,33 @@ var (
 	ErrMatch = errors.New("path did not match rule")
 )
 
-func NewRule(path string) (*Rule, error) {
+func NewRule(path string, methods ...string) (*Rule, error) {
+	// Ensure that the path begins with a leading slash.
 	if path == "" || path[0] != '/' {
 		return nil, ErrLeadingSlash
 	}
-	return &Rule{path: path, converters: make(map[string]Converter)}, nil
+
+	rule := &Rule{path: path, converters: make(map[string]Converter)}
+
+	// Add GET if no methods were provided.
+	methods = append(methods, "GET")
+
+	// Remove duplicate methods and ensure uppercase.
+	exist := make(map[string]bool)
+	for _, v := range methods {
+		method := strings.ToUpper(v)
+		if !exist[method] {
+			rule.methods = append(rule.methods, method)
+			exist[method] = true
+		}
+	}
+
+	// Add HEAD if not already provided when GET is present.
+	if !exist["HEAD"] && exist["GET"] {
+		rule.methods = append(rule.methods, "HEAD")
+	}
+
+	return rule, nil
 }
 
 func (r *Rule) bind(router *Router) error {
