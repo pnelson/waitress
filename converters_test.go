@@ -89,6 +89,42 @@ func TestPathConverterRegexp(t *testing.T) {
 	}
 }
 
+func TestAnyConverter(t *testing.T) {
+	var anyConverterTests = []struct {
+		args   cargs
+		regexp string
+	}{
+		{cargs{"items": "a"}, `(?:a)`},
+		{cargs{"items": "a,b"}, `(?:a|b)`},
+		{cargs{"items": "a,b,c"}, `(?:a|b|c)`},
+	}
+
+	for i, tt := range anyConverterTests {
+		c := NewAnyConverter(tt.args)
+		if regexp := c.Regexp(); regexp != tt.regexp {
+			t.Errorf("%d. AnyConverter(%v) regexp\nhave `%s`\nwant `%s`",
+				i, tt.args, regexp, tt.regexp)
+		}
+	}
+}
+
+func TestAnyConverterNil(t *testing.T) {
+	var anyConverterTests = []cargs{
+		cargs{},
+		cargs{"items": ""},
+		cargs{"items": ","},
+		cargs{"items": "a,"},
+		cargs{"items": ",a"},
+	}
+
+	for i, args := range anyConverterTests {
+		c := NewAnyConverter(args)
+		if c != nil {
+			t.Errorf("%d. NewPathConverter(%v) = %v, want <nil>", i, args, c)
+		}
+	}
+}
+
 func TestIntConverter(t *testing.T) {
 	var intConverterTests = []struct {
 		args        cargs

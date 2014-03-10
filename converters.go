@@ -74,11 +74,11 @@ func NewPathConverter(args map[string]string) Converter {
 func NewAnyConverter(args map[string]string) Converter {
 	arg := strings.Replace(args["items"], " ", "", -1)
 	items := strings.Split(arg, ",")
-	if len(items) == 0 {
-		return nil
-	}
 
 	for i, v := range items {
+		if v == "" {
+			return nil
+		}
 		items[i] = regexp.QuoteMeta(v)
 	}
 
