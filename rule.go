@@ -12,6 +12,7 @@ type Rule struct {
 	path       string
 	name       string
 	methods    []string
+	defaults   map[string]interface{}
 	regexp     *regexp.Regexp
 	arguments  []string
 	converters map[string]Converter
@@ -75,6 +76,11 @@ func NewRule(path, name string, methods []string) (*Rule, error) {
 	}
 
 	return rule, nil
+}
+
+func (r *Rule) Defaults(args map[string]interface{}) *Rule {
+	r.defaults = args
+	return r
 }
 
 func (r *Rule) bind(router *Router) error {

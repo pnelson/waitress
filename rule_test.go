@@ -65,6 +65,23 @@ func TestNewRuleMethods(t *testing.T) {
 	}
 }
 
+func TestRuleDefaults(t *testing.T) {
+	args := map[string]interface{}{"foo": "foo", "bar": 4}
+
+	rule, err := NewRule(`/`, "", []string{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	rv := rule.Defaults(args)
+	if !reflect.DeepEqual(rule.defaults, args) {
+		t.Errorf("rule.Defaults should assign args to `defaults` struct member")
+	}
+	if rv != rule {
+		t.Errorf("rule.Defaults should return itself")
+	}
+}
+
 func TestCompile(t *testing.T) {
 	var compileTest = []struct {
 		in  string
