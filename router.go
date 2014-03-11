@@ -48,8 +48,8 @@ func (r *Router) BindToRequest(req *http.Request) *Adapter {
 	return r.Bind(method, scheme, host, path, query)
 }
 
-func (r *Router) Rule(path string) (*Rule, error) {
-	rule, err := NewRule(path)
+func (r *Router) Rule(path string, methods []string) (*Rule, error) {
+	rule, err := NewRule(path, methods)
 	if err != nil {
 		return nil, err
 	}

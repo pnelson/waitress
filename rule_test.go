@@ -17,7 +17,7 @@ func TestNewRule(t *testing.T) {
 	}
 
 	for i, path := range newRuleTest {
-		rule, err := NewRule(path)
+		rule, err := NewRule(path, []string{})
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue
@@ -30,9 +30,38 @@ func TestNewRule(t *testing.T) {
 }
 
 func TestNewRuleError(t *testing.T) {
-	_, err := NewRule(`path`)
+	_, err := NewRule(`path`, []string{})
 	if err != ErrLeadingSlash {
 		t.Fatalf("unexpected error\nhave %v\nwant %v", err, ErrLeadingSlash)
+	}
+}
+
+func TestNewRuleMethods(t *testing.T) {
+	var methodTests = []struct {
+		in  []string
+		out []string
+	}{
+		{[]string{"POST"}, []string{"POST"}},
+		{[]string{"POST", "PUT"}, []string{"POST", "PUT"}},
+		{[]string{"post"}, []string{"POST"}},
+		{[]string{"POST", "POST"}, []string{"POST"}},
+		{[]string{"post", "POST"}, []string{"POST"}},
+		{[]string{"POST", "post"}, []string{"POST"}},
+		{[]string{"GET", "HEAD"}, []string{"GET", "HEAD"}},
+		{[]string{"GET"}, []string{"GET", "HEAD"}},
+		{[]string{"HEAD"}, []string{"HEAD"}},
+	}
+
+	for i, tt := range methodTests {
+		rule, err := NewRule(`/`, tt.in)
+		if err != nil {
+			t.Errorf("%d. unexpected error: %v", i, err)
+			continue
+		}
+
+		if !reflect.DeepEqual(rule.methods, tt.out) {
+			t.Errorf("%d. rule.methods\nhave %v\nwant %v", i, rule.methods, tt.out)
+		}
 	}
 }
 
@@ -52,7 +81,7 @@ func TestCompile(t *testing.T) {
 
 	for i, tt := range compileTest {
 		router := New()
-		rule, err := NewRule(tt.in)
+		rule, err := NewRule(tt.in, []string{})
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue
@@ -75,7 +104,7 @@ func TestCompile(t *testing.T) {
 }
 
 func TestCompileUnbound(t *testing.T) {
-	rule, err := NewRule(`/`)
+	rule, err := NewRule(`/`, []string{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -103,7 +132,7 @@ func TestCompileErrors(t *testing.T) {
 
 	router := New()
 	for i, tt := range compileTests {
-		rule, err := NewRule(tt.path)
+		rule, err := NewRule(tt.path, []string{})
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue
@@ -130,7 +159,7 @@ func TestMatch(t *testing.T) {
 
 	router := New()
 	for i, tt := range matchTests {
-		rule, err := NewRule(tt.rule)
+		rule, err := NewRule(tt.rule, []string{})
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue
