@@ -17,6 +17,7 @@ type Router struct {
 }
 
 type sortRules []*Rule
+type sortNames []*Rule
 
 func New() *Router {
 	return &Router{
@@ -67,7 +68,12 @@ func (r *Router) sort() {
 	if r.sorted {
 		return
 	}
+
 	sort.Sort(sortRules(r.rules))
+	for _, rules := range r.names {
+		sort.Sort(sortNames(rules))
+	}
+
 	r.sorted = true
 }
 
@@ -100,4 +106,19 @@ func (s sortRules) Less(i, j int) bool {
 
 	// Lastly, rules are sorted by ascending weight.
 	return s[i].weight < s[j].weight
+}
+
+func (s sortNames) Len() int      { return len(s) }
+func (s sortNames) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s sortNames) Less(i, j int) bool {
+	// Rules with more arguments come first.
+	if len(s[i].arguments) > len(s[j].arguments) {
+		return true
+	}
+	if len(s[i].arguments) < len(s[j].arguments) {
+		return false
+	}
+
+	// Lastly, rules are sorted by descending default argument quantity.
+	return len(s[i].defaults) > len(s[j].defaults)
 }

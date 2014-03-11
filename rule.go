@@ -3,6 +3,7 @@ package router
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -83,12 +84,80 @@ func (r *Rule) Defaults(args map[string]interface{}) *Rule {
 	return r
 }
 
+func (r *Rule) allowed(method string) bool {
+	for _, m := range r.methods {
+		if m == method {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *Rule) bind(router *Router) error {
 	if r.router != nil {
 		return ErrBound
 	}
 	r.router = router
 	return r.compile()
+}
+
+func (r *Rule) build(args map[string]interface{}) (string, bool) {
+	parts := []string{}
+	processed := []string{}
+	for _, trace := range r.trace {
+		if trace.param {
+			part, err := r.converters[trace.part].ToUrl(args[trace.part])
+			if err != nil {
+				return "", false
+			}
+			parts = append(parts, part)
+			processed = append(processed, trace.part)
+		} else {
+			parts = append(parts, trace.part)
+		}
+	}
+
+	for _, key := range processed {
+		delete(args, key)
+	}
+
+	q := &url.Values{}
+	for k, v := range args {
+		q.Set(k, fmt.Sprintf("%v", v))
+	}
+
+	url := &url.URL{}
+	url.Path = fmt.Sprintf("/%s", strings.Join(parts, "/"))
+	url.RawQuery = q.Encode()
+
+	return url.RequestURI(), true
+}
+
+func (r *Rule) buildable(method string, args map[string]interface{}) bool {
+	// Unable to build rule if the method does not match.
+	if !r.allowed(method) {
+		return false
+	}
+
+	// All required values must be present between args and defaults.
+	for _, key := range r.arguments {
+		if _, ok := r.defaults[key]; !ok {
+			if _, ok := args[key]; !ok {
+				return false
+			}
+		}
+	}
+
+	// Ensure default values are skipped or equal to args.
+	for k, v := range r.defaults {
+		if arg, ok := args[k]; ok {
+			if arg != v {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (r *Rule) compile() error {

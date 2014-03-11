@@ -19,6 +19,22 @@ func NewAdapter(router *Router, method, scheme, host, path, query string) *Adapt
 	return &Adapter{router, method, scheme, host, path, query}
 }
 
+func (a *Adapter) Build(method, name string, args map[string]interface{}) (string, bool) {
+	a.router.sort()
+
+	for _, rule := range a.router.names[name] {
+		if rule.buildable(method, args) {
+			rv, ok := rule.build(args)
+			if !ok {
+				continue
+			}
+			return rv, true
+		}
+	}
+
+	return "", false
+}
+
 func (a *Adapter) Match() (*Rule, map[string]interface{}, error) {
 	a.router.sort()
 

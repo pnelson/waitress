@@ -199,3 +199,39 @@ func TestMatch(t *testing.T) {
 		}
 	}
 }
+
+func TestBuild(t *testing.T) {
+	var buildTests = []struct {
+		rule string
+		args args
+		out  string
+	}{
+		{`/`, args{}, "/"},
+		{`/foo`, args{}, "/foo"},
+		{`/foo`, args{"bar": "bar", "baz": 4}, "/foo?bar=bar&baz=4"},
+		{`/foo/<bar>`, args{"bar": "bar", "baz": 4}, "/foo/bar?baz=4"},
+		{`/foo/<bar:int(digits=3)>`, args{"bar": 4}, "/foo/004"},
+	}
+
+	router := New()
+	for i, tt := range buildTests {
+		rule, err := NewRule(tt.rule, "", []string{})
+		if err != nil {
+			t.Errorf("%d. unexpected error: %v", i, err)
+			continue
+		}
+
+		err = rule.bind(router)
+		if err != nil {
+			t.Errorf("%d. unexpected error: %v", i, err)
+			continue
+		}
+
+		out, ok := rule.build(tt.args)
+		if !ok || out != tt.out {
+			t.Errorf("%d. rule.build(%v)\nhave %q, %t\nwant %q, %t",
+				i, tt.args, out, ok, tt.out, true)
+			continue
+		}
+	}
+}
