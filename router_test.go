@@ -57,7 +57,7 @@ func TestSort(t *testing.T) {
 
 	r := New()
 	for i, tt := range sortTestRules {
-		_, err := r.Rule(tt.path, []string{})
+		_, err := r.Rule(tt.path, "", []string{})
 		if err != nil {
 			t.Fatalf("%d. router.Rule(%q) %v", i, tt.path, err)
 		}

@@ -12,6 +12,8 @@ type Router struct {
 
 	rules  []*Rule // The sequence of rules for this router.
 	sorted bool    // Indicates whether or not the rules are already sorted.
+
+	names map[string][]*Rule // Map of rules by name.
 }
 
 type sortRules []*Rule
@@ -25,6 +27,8 @@ func New() *Router {
 			"any":     NewAnyConverter,
 			"int":     NewIntConverter,
 		},
+
+		names: make(map[string][]*Rule),
 	}
 }
 
@@ -48,13 +52,14 @@ func (r *Router) BindToRequest(req *http.Request) *Adapter {
 	return r.Bind(method, scheme, host, path, query)
 }
 
-func (r *Router) Rule(path string, methods []string) (*Rule, error) {
-	rule, err := NewRule(path, methods)
+func (r *Router) Rule(path, name string, methods []string) (*Rule, error) {
+	rule, err := NewRule(path, name, methods)
 	if err != nil {
 		return nil, err
 	}
 	rule.bind(r)
 	r.rules = append(r.rules, rule)
+	r.names[name] = append(r.names[name], rule)
 	return rule, nil
 }
 

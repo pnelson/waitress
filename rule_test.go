@@ -17,7 +17,7 @@ func TestNewRule(t *testing.T) {
 	}
 
 	for i, path := range newRuleTest {
-		rule, err := NewRule(path, []string{})
+		rule, err := NewRule(path, "", []string{})
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue
@@ -30,7 +30,7 @@ func TestNewRule(t *testing.T) {
 }
 
 func TestNewRuleError(t *testing.T) {
-	_, err := NewRule(`path`, []string{})
+	_, err := NewRule(`path`, "", []string{})
 	if err != ErrLeadingSlash {
 		t.Fatalf("unexpected error\nhave %v\nwant %v", err, ErrLeadingSlash)
 	}
@@ -53,7 +53,7 @@ func TestNewRuleMethods(t *testing.T) {
 	}
 
 	for i, tt := range methodTests {
-		rule, err := NewRule(`/`, tt.in)
+		rule, err := NewRule(`/`, "", tt.in)
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue
@@ -81,7 +81,7 @@ func TestCompile(t *testing.T) {
 
 	for i, tt := range compileTest {
 		router := New()
-		rule, err := NewRule(tt.in, []string{})
+		rule, err := NewRule(tt.in, "", []string{})
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue
@@ -104,7 +104,7 @@ func TestCompile(t *testing.T) {
 }
 
 func TestCompileUnbound(t *testing.T) {
-	rule, err := NewRule(`/`, []string{})
+	rule, err := NewRule(`/`, "", []string{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -132,7 +132,7 @@ func TestCompileErrors(t *testing.T) {
 
 	router := New()
 	for i, tt := range compileTests {
-		rule, err := NewRule(tt.path, []string{})
+		rule, err := NewRule(tt.path, "", []string{})
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue
@@ -159,7 +159,7 @@ func TestMatch(t *testing.T) {
 
 	router := New()
 	for i, tt := range matchTests {
-		rule, err := NewRule(tt.rule, []string{})
+		rule, err := NewRule(tt.rule, "", []string{})
 		if err != nil {
 			t.Errorf("%d. unexpected error: %v", i, err)
 			continue

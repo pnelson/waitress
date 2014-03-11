@@ -134,7 +134,7 @@ func basicAdapterSetup(t *testing.T) *Router {
 
 	r := New()
 	for i, path := range basicRules {
-		_, err := r.Rule(path, []string{})
+		_, err := r.Rule(path, "", []string{})
 		if err != nil {
 			t.Fatalf("%d. router.Rule(%q) %v", i, path, err)
 		}
