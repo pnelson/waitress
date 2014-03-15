@@ -14,7 +14,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestBind(t *testing.T) {
+func TestRouterBind(t *testing.T) {
 	r := New()
 	adapter := r.Bind("GET", "http", "localhost", "/", "")
 	if adapter == nil {
@@ -22,7 +22,7 @@ func TestBind(t *testing.T) {
 	}
 }
 
-func TestBindSimple(t *testing.T) {
+func TestRouterBindSimple(t *testing.T) {
 	r := New()
 	adapter := r.BindSimple("http", "localhost")
 	if adapter == nil {
@@ -30,7 +30,7 @@ func TestBindSimple(t *testing.T) {
 	}
 }
 
-func TestBindToRequest(t *testing.T) {
+func TestRouterBindToRequest(t *testing.T) {
 	r := New()
 	req, err := http.NewRequest("GET", "http://localhost/", nil)
 	if err != nil {
@@ -43,7 +43,7 @@ func TestBindToRequest(t *testing.T) {
 	}
 }
 
-func TestSort(t *testing.T) {
+func TestRouterSort(t *testing.T) {
 	var sortTestRules = []struct {
 		path  string
 		index int

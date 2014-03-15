@@ -120,7 +120,7 @@ func TestCompile(t *testing.T) {
 	}
 }
 
-func TestCompileUnbound(t *testing.T) {
+func TestRuleCompileUnbound(t *testing.T) {
 	rule, err := NewRule(`/`, "", []string{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -132,7 +132,7 @@ func TestCompileUnbound(t *testing.T) {
 	}
 }
 
-func TestCompileErrors(t *testing.T) {
+func TestRuleCompileErrors(t *testing.T) {
 	var compileTests = []struct {
 		path string
 		err  error
@@ -161,7 +161,7 @@ func TestCompileErrors(t *testing.T) {
 	}
 }
 
-func TestMatch(t *testing.T) {
+func TestRuleMatch(t *testing.T) {
 	var matchTests = []struct {
 		rule string
 		path string
@@ -200,7 +200,7 @@ func TestMatch(t *testing.T) {
 	}
 }
 
-func TestBuild(t *testing.T) {
+func TestRuleBuild(t *testing.T) {
 	var buildTests = []struct {
 		rule string
 		args args
