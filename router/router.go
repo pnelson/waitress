@@ -64,6 +64,21 @@ func (r *Router) Rule(path, name string, methods []string) (*Rule, error) {
 	return rule, nil
 }
 
+func (r *Router) Mount(prefix, name string, router *Router) []error {
+	var errors []error
+	for _, rule := range router.rules {
+		_, err := r.Rule(
+			prefix+rule.path,
+			fmt.Sprintf("%s.%s", name, rule.name),
+			rule.methods,
+		)
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+	return errors
+}
+
 func (r *Router) sort() {
 	if r.sorted {
 		return

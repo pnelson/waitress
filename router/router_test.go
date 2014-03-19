@@ -43,6 +43,60 @@ func TestRouterBindToRequest(t *testing.T) {
 	}
 }
 
+func TestRouterRule(t *testing.T) {
+	r := New()
+	rule, err := r.Rule("/", "", []string{})
+	if rule == nil {
+		t.Errorf("router.Rule returned nil rule")
+	}
+	if err != nil {
+		t.Errorf("router.Rule returned error: %v", err)
+	}
+}
+
+func TestRouterRuleError(t *testing.T) {
+	r := New()
+	rule, err := r.Rule("", "", []string{})
+	if rule != nil {
+		t.Errorf("router.Rule returned a rule: %v", rule)
+	}
+	if err == nil {
+		t.Errorf("router.Rule returned nil error")
+	}
+}
+
+func TestRouterMount(t *testing.T) {
+	var rules = []struct {
+		path string
+		name string
+	}{
+		{"/", "Index"},
+		{"/r2/", "R2.Index"},
+		{"/r2/<id:int>", "R2.Show"},
+	}
+
+	r := New()
+	r.Rule("/", "Index", []string{})
+
+	r2 := New()
+	r2.Rule("/", "Index", []string{})
+	r2.Rule("/<id:int>", "Show", []string{})
+
+	errors := r.Mount("/r2", "R2", r2)
+	if errors != nil {
+		t.Errorf("router.Mount returned errors: %v", errors)
+	}
+
+	for i, rule := range r.rules {
+		if rule.path != rules[i].path {
+			t.Errorf("%d. rule.path\nhave %q\nwant %q", i, rule.path, rules[i].path)
+		}
+		if rule.name != rules[i].name {
+			t.Errorf("%d. rule.name\nhave %q\nwant %q", i, rule.name, rules[i].name)
+		}
+	}
+}
+
 func TestRouterSort(t *testing.T) {
 	var sortTestRules = []struct {
 		path  string
