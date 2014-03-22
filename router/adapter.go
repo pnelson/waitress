@@ -13,6 +13,8 @@ type Adapter struct {
 	query  string
 }
 
+type DispatchFunc func(*Rule, map[string]interface{}) (interface{}, error)
+
 var ErrNotFound = errors.New("not found")
 
 func NewAdapter(router *Router, method, scheme, host, path, query string) *Adapter {
@@ -33,6 +35,14 @@ func (a *Adapter) Build(method, name string, args map[string]interface{}) (strin
 	}
 
 	return "", false
+}
+
+func (a *Adapter) Dispatch(f DispatchFunc) (interface{}, error) {
+	rule, args, err := a.Match()
+	if err != nil {
+		return nil, err
+	}
+	return f(rule, args)
 }
 
 func (a *Adapter) Match() (*Rule, map[string]interface{}, error) {

@@ -84,6 +84,10 @@ func (r *Rule) Defaults(args map[string]interface{}) *Rule {
 	return r
 }
 
+func (r *Rule) Parameters() []string {
+	return r.regexp.SubexpNames()[1:]
+}
+
 func (r *Rule) allowed(method string) bool {
 	for _, m := range r.methods {
 		if m == method {

@@ -12,10 +12,10 @@ type Application struct {
 	*Router
 }
 
-func New() *Application {
+func New(ctx interface{}) *Application {
 	return &Application{
 		Builder: &middleware.Builder{},
-		Router:  NewRouter(),
+		Router:  NewRouter(ctx),
 	}
 }
 
@@ -30,7 +30,7 @@ func (app *Application) Dispatch(w http.ResponseWriter, r *http.Request) {
 
 func (app *Application) Recover() {
 	if err := recover(); err != nil {
-		fmt.Println(err)
+		fmt.Println("recovered from panic:", err)
 	}
 }
 
