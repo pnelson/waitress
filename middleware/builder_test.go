@@ -45,6 +45,45 @@ func TestBuilderUse(t *testing.T) {
 	}
 }
 
+func TestBuilderUseBuilder(t *testing.T) {
+	rv := ""
+
+	other := &Builder{}
+	other.Use(testBuilderMiddleware)
+	other.UseHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rv += "X"
+	})
+
+	builder := &Builder{}
+	builder.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			rv += "a"
+			next.ServeHTTP(w, r)
+			rv += "b"
+		})
+	})
+	builder.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			rv += "c"
+			next.ServeHTTP(w, r)
+			rv += "d"
+		})
+	})
+	builder.UseBuilder(other)
+
+	recorder := httptest.NewRecorder()
+	builder.ServeHTTP(recorder, (*http.Request)(nil))
+
+	if recorder.Code != http.StatusTeapot {
+		t.Errorf("code have %d want %d", recorder.Code, http.StatusTeapot)
+	}
+
+	expected := "acXdb"
+	if rv != expected {
+		t.Errorf("body have %q want %q", rv, expected)
+	}
+}
+
 func TestBuilderUseHandler(t *testing.T) {
 	rv := ""
 
