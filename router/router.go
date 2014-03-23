@@ -10,6 +10,11 @@ type Router struct {
 	// Map of variable converters available for use in rule paths.
 	Converters map[string]NewConverter
 
+	RedirectHandler            func(string, int) http.Handler
+	NotFoundHandler            func() http.Handler
+	MethodNotAllowedHandler    func([]string) http.Handler
+	InternalServerErrorHandler func() http.Handler
+
 	rules  []*Rule // The sequence of rules for this router.
 	sorted bool    // Indicates whether or not the rules are already sorted.
 
@@ -28,6 +33,11 @@ func New() *Router {
 			"any":     NewAnyConverter,
 			"int":     NewIntConverter,
 		},
+
+		RedirectHandler:            Redirect,
+		NotFoundHandler:            NotFound,
+		MethodNotAllowedHandler:    MethodNotAllowed,
+		InternalServerErrorHandler: InternalServerError,
 
 		names: make(map[string][]*Rule),
 	}
