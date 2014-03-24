@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-type Error interface {
-	http.Handler
-	SetHeaders(http.ResponseWriter)
-}
-
 type ErrorResponse struct {
 	Code    int    `json:"-"`
 	Name    string `json:"name"`
@@ -22,7 +17,7 @@ type MethodNotAllowedResponse struct {
 	Allowed []string
 }
 
-func BadRequest() Error {
+func BadRequest() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 400,
 		Name: "Bad Request",
@@ -31,7 +26,7 @@ func BadRequest() Error {
 	}
 }
 
-func Unauthorized() Error {
+func Unauthorized() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 401,
 		Name: "Unauthorized",
@@ -40,7 +35,7 @@ func Unauthorized() Error {
 	}
 }
 
-func Forbidden() Error {
+func Forbidden() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 403,
 		Name: "Forbidden",
@@ -49,7 +44,7 @@ func Forbidden() Error {
 	}
 }
 
-func NotFound() Error {
+func NotFound() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 404,
 		Name: "Not Found",
@@ -58,7 +53,7 @@ func NotFound() Error {
 	}
 }
 
-func MethodNotAllowed(allowed []string) Error {
+func MethodNotAllowed(allowed []string) *MethodNotAllowedResponse {
 	return &MethodNotAllowedResponse{
 		Allowed: allowed,
 		ErrorResponse: &ErrorResponse{
@@ -69,7 +64,7 @@ func MethodNotAllowed(allowed []string) Error {
 	}
 }
 
-func NotAcceptable() Error {
+func NotAcceptable() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 406,
 		Name: "Not Acceptable",
@@ -79,7 +74,7 @@ func NotAcceptable() Error {
 	}
 }
 
-func RequestTimeout() Error {
+func RequestTimeout() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 408,
 		Name: "Request Timeout",
@@ -88,7 +83,7 @@ func RequestTimeout() Error {
 	}
 }
 
-func Conflict() Error {
+func Conflict() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 409,
 		Name: "Conflict",
@@ -97,7 +92,7 @@ func Conflict() Error {
 	}
 }
 
-func Gone() Error {
+func Gone() *ErrorResponse {
 	return &ErrorResponse{
 		Code:    410,
 		Name:    "Gone",
@@ -105,7 +100,7 @@ func Gone() Error {
 	}
 }
 
-func LengthRequired() Error {
+func LengthRequired() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 411,
 		Name: "Length Required",
@@ -114,7 +109,7 @@ func LengthRequired() Error {
 	}
 }
 
-func PreconditionFailed() Error {
+func PreconditionFailed() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 412,
 		Name: "Precondition Failed",
@@ -123,7 +118,7 @@ func PreconditionFailed() Error {
 	}
 }
 
-func RequestEntityTooLarge() Error {
+func RequestEntityTooLarge() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 413,
 		Name: "Request Entity Too Large",
@@ -132,7 +127,7 @@ func RequestEntityTooLarge() Error {
 	}
 }
 
-func RequestURITooLong() Error {
+func RequestURITooLong() *ErrorResponse {
 	return &ErrorResponse{
 		Code:    414,
 		Name:    "Request-URI Too Long",
@@ -140,7 +135,7 @@ func RequestURITooLong() Error {
 	}
 }
 
-func UnsupportedMediaType() Error {
+func UnsupportedMediaType() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 415,
 		Name: "Unsupported Media Type",
@@ -149,7 +144,7 @@ func UnsupportedMediaType() Error {
 	}
 }
 
-func RequestedRangeNotSatisfiable() Error {
+func RequestedRangeNotSatisfiable() *ErrorResponse {
 	return &ErrorResponse{
 		Code:    416,
 		Name:    "Requested Range Not Satisfiable",
@@ -157,7 +152,7 @@ func RequestedRangeNotSatisfiable() Error {
 	}
 }
 
-func ExpectationFailed() Error {
+func ExpectationFailed() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 417,
 		Name: "Expectation Failed",
@@ -166,7 +161,7 @@ func ExpectationFailed() Error {
 	}
 }
 
-func UnprocessableEntity() Error {
+func UnprocessableEntity() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 422,
 		Name: "Unprocessable Entity",
@@ -175,7 +170,7 @@ func UnprocessableEntity() Error {
 	}
 }
 
-func TooManyRequests() Error {
+func TooManyRequests() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 429,
 		Name: "Too Many Requests",
@@ -184,7 +179,7 @@ func TooManyRequests() Error {
 	}
 }
 
-func InternalServerError() Error {
+func InternalServerError() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 500,
 		Name: "Internal Server Error",
@@ -193,7 +188,7 @@ func InternalServerError() Error {
 	}
 }
 
-func NotImplemented() Error {
+func NotImplemented() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 501,
 		Name: "Not Implemented",
@@ -202,7 +197,7 @@ func NotImplemented() Error {
 	}
 }
 
-func BadGateway() Error {
+func BadGateway() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 502,
 		Name: "Bad Gateway",
@@ -211,7 +206,7 @@ func BadGateway() Error {
 	}
 }
 
-func ServiceUnavailable() Error {
+func ServiceUnavailable() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 503,
 		Name: "Service Unavailable",
@@ -220,7 +215,7 @@ func ServiceUnavailable() Error {
 	}
 }
 
-func GatewayTimeout() Error {
+func GatewayTimeout() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 504,
 		Name: "Gateway Timeout",
@@ -229,20 +224,27 @@ func GatewayTimeout() Error {
 	}
 }
 
-func (e *ErrorResponse) SetHeaders(w http.ResponseWriter) {}
-func (e *ErrorResponse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	b, err := json.MarshalIndent(e, "", "  ")
+func (e *ErrorResponse) Error() string {
+	return e.Message
+}
+
+func (e *ErrorResponse) Write(w http.ResponseWriter, body []byte, err error) {
 	if err != nil {
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	e.SetHeaders(w)
 	w.WriteHeader(e.Code)
-	w.Write(b)
+	w.Write(body)
 }
 
-func (e *MethodNotAllowedResponse) SetHeaders(w http.ResponseWriter) {
+func (e *ErrorResponse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	rv, err := json.MarshalIndent(e, "", "  ")
+	e.Write(w, rv, err)
+}
+
+func (e *MethodNotAllowedResponse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	allowed := strings.Join(e.Allowed, ", ")
 	w.Header().Set("Allow", allowed)
+	e.ErrorResponse.ServeHTTP(w, r)
 }
