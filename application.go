@@ -10,6 +10,7 @@ import (
 type Application struct {
 	*middleware.Builder
 	*Router
+	closed bool
 }
 
 func New(ctx interface{}) *Application {
@@ -37,12 +38,12 @@ func New(ctx interface{}) *Application {
 	return app
 }
 
-func (app *Application) Close() {
-	app.UseHandler(app.Router)
-}
-
 func (app *Application) Dispatch(w http.ResponseWriter, r *http.Request) {
 	defer app.Recover()
+	if !app.closed {
+		app.UseHandler(app.Router)
+		app.closed = true
+	}
 	app.Builder.ServeHTTP(w, r)
 }
 
@@ -53,8 +54,6 @@ func (app *Application) Recover() {
 }
 
 func (app *Application) Run() {
-	app.Close()
-
 	addr := fmt.Sprintf("%s:%d", "localhost", 3000)
 	fmt.Println(fmt.Sprintf("Running on %s://%s/", "http", addr))
 
