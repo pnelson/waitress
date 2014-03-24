@@ -13,10 +13,28 @@ type Application struct {
 }
 
 func New(ctx interface{}) *Application {
-	return &Application{
+	app := &Application{
 		Builder: &middleware.Builder{},
 		Router:  NewRouter(ctx),
 	}
+
+	app.SetRedirectHandler(func(path string, code int) http.Handler {
+		return RedirectToWithCode(path, code)
+	})
+
+	app.SetNotFoundHandler(func() http.Handler {
+		return NotFound()
+	})
+
+	app.SetMethodNotAllowedHandler(func(allowed []string) http.Handler {
+		return MethodNotAllowed(allowed)
+	})
+
+	app.SetInternalServerErrorHandler(func() http.Handler {
+		return InternalServerError()
+	})
+
+	return app
 }
 
 func (app *Application) Close() {
@@ -45,4 +63,20 @@ func (app *Application) Run() {
 
 func (app *Application) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	app.Dispatch(w, r)
+}
+
+func (app *Application) SetRedirectHandler(f func(string, int) http.Handler) {
+	app.Router.RedirectHandler = f
+}
+
+func (app *Application) SetNotFoundHandler(f func() http.Handler) {
+	app.Router.NotFoundHandler = f
+}
+
+func (app *Application) SetMethodNotAllowedHandler(f func([]string) http.Handler) {
+	app.Router.MethodNotAllowedHandler = f
+}
+
+func (app *Application) SetInternalServerErrorHandler(f func() http.Handler) {
+	app.Router.InternalServerErrorHandler = f
 }
