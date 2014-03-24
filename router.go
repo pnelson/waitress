@@ -42,57 +42,62 @@ func (r *Router) Mount(prefix string, fragment *Fragment) {
 }
 
 func (r *Router) Dispatch(w http.ResponseWriter, req *http.Request) router.DispatchFunc {
+	// Construct the method receiver for the endpoint.
 	ctx := reflect.New(r.context.Elem())
 	ctx.Elem().FieldByName("Context").Set(reflect.ValueOf(NewContext(w, req)))
 
-	return func(rule *router.Rule, args map[string]interface{}) (interface{}, error) {
+	return func(rule *router.Rule, args map[string]interface{}) interface{} {
+		// Find the endpoint given the matched rule.
 		endpoint, ok := r.endpoints[rule]
 		if !ok {
-			return nil, nil // change
+			return r.NotFoundHandler()
 		}
 
+		// Ensure that arguments provided match the number of arguments expected.
 		t := endpoint.Type()
 		keys := rule.Parameters()
 		if t.NumIn() > len(keys)+1 {
-			return nil, nil // change
+			return r.InternalServerErrorHandler()
 		}
 
+		// Prepare the calling parameters.
+		// Method expressions take the receiver as the first argument.
 		params := make([]reflect.Value, len(keys)+1)
 		params[0] = ctx
 		for i, key := range keys {
 			params[i+1] = reflect.ValueOf(args[key])
 		}
 
+		// Call our endpoint and return successful if no return value.
 		rv := endpoint.Call(params)
-		if count := len(rv); count != 1 {
-			if count == 0 {
-				return nil, nil
-			}
-			return nil, nil // change
+		if len(rv) == 0 {
+			return []byte(nil)
 		}
 
-		return rv[0].Interface(), nil
+		// We do not support more than one return value.
+		if len(rv) > 1 {
+			return r.InternalServerErrorHandler()
+		}
+
+		return rv[0].Interface()
 	}
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	adapter := r.BindToRequest(req)
-	rv, err := adapter.Dispatch(r.Dispatch(w, req))
-	if err != nil {
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
+	rv := adapter.Dispatch(r.Dispatch(w, req))
 
-	switch response := rv.(type) {
+	switch v := rv.(type) {
 	case []byte:
-		w.Write(response)
+		w.Write(v)
 	case string:
-		w.Write([]byte(response))
+		w.Write([]byte(v))
 	case http.Handler:
-		response.ServeHTTP(w, req)
-	case http.HandlerFunc:
-		response(w, req)
+		v.ServeHTTP(w, req)
+	case func(http.ResponseWriter, *http.Request):
+		v(w, req)
 	default:
-		http.Error(w, "Internal Server Error", 500)
+		fallback := r.InternalServerErrorHandler()
+		fallback.ServeHTTP(w, req)
 	}
 }
