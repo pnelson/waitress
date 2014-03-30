@@ -3,49 +3,46 @@ package waitress
 import (
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/pnelson/waitress/router"
 )
 
 type Router struct {
 	*router.Router
-	context   reflect.Type
-	endpoints map[*router.Rule]reflect.Value
+	endpoints map[*router.Rule]*endpoint
 }
 
-func NewRouter(ctx interface{}) *Router {
+type endpoint struct {
+	context reflect.Type
+	method  reflect.Value
+}
+
+func NewRouter() *Router {
 	return &Router{
 		Router:    router.New(),
-		context:   reflect.TypeOf(ctx),
-		endpoints: make(map[*router.Rule]reflect.Value),
+		endpoints: make(map[*router.Rule]*endpoint),
 	}
 }
 
-func (r *Router) Route(path, name string, methods []string) error {
+func (r *Router) Route(path, name string, context reflect.Type, methods []string) error {
 	rule, err := r.Rule(path, name, methods)
 	if err != nil {
 		return err
 	}
 
-	endpoint, ok := r.context.MethodByName(name)
+	parts := strings.Split(name, ".")
+	method, ok := context.MethodByName(parts[len(parts)-1])
 	if !ok {
 		return nil // change
 	}
 
-	r.endpoints[rule] = endpoint.Func
+	r.endpoints[rule] = &endpoint{context, method.Func}
 
 	return nil
 }
 
-func (r *Router) Mount(prefix string, fragment *Fragment) {
-	//name := reflect.TypeOf(fragment).Elem().Name()
-}
-
 func (r *Router) Dispatch(w http.ResponseWriter, req *http.Request) router.DispatchFunc {
-	// Construct the method receiver for the endpoint.
-	ctx := reflect.New(r.context.Elem())
-	ctx.Elem().FieldByName("Context").Set(reflect.ValueOf(NewContext(w, req)))
-
 	return func(rule *router.Rule, args map[string]interface{}) interface{} {
 		// Find the endpoint given the matched rule.
 		endpoint, ok := r.endpoints[rule]
@@ -54,11 +51,15 @@ func (r *Router) Dispatch(w http.ResponseWriter, req *http.Request) router.Dispa
 		}
 
 		// Ensure that arguments provided match the number of arguments expected.
-		t := endpoint.Type()
+		t := endpoint.method.Type()
 		keys := rule.Parameters()
 		if t.NumIn() > len(keys)+1 {
 			return r.InternalServerErrorHandler()
 		}
+
+		// Construct the method receiver for the endpoint.
+		ctx := reflect.New(endpoint.context.Elem())
+		ctx.Elem().FieldByName("Context").Set(reflect.ValueOf(NewContext(w, req)))
 
 		// Prepare the calling parameters.
 		// Method expressions take the receiver as the first argument.
@@ -69,7 +70,7 @@ func (r *Router) Dispatch(w http.ResponseWriter, req *http.Request) router.Dispa
 		}
 
 		// Call our endpoint and return successful if no return value.
-		rv := endpoint.Call(params)
+		rv := endpoint.method.Call(params)
 		if len(rv) == 0 {
 			return []byte(nil)
 		}

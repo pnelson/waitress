@@ -3,6 +3,7 @@ package waitress
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/pnelson/waitress/middleware"
 )
@@ -10,13 +11,16 @@ import (
 type Application struct {
 	*middleware.Builder
 	*Router
-	closed bool
+
+	context reflect.Type
+	closed  bool
 }
 
 func New(ctx interface{}) *Application {
 	app := &Application{
 		Builder: &middleware.Builder{},
-		Router:  NewRouter(ctx),
+		Router:  NewRouter(),
+		context: reflect.TypeOf(ctx),
 	}
 
 	app.SetRedirectHandler(func(path string, code int) http.Handler {
@@ -45,6 +49,14 @@ func (app *Application) Dispatch(w http.ResponseWriter, r *http.Request) {
 		app.closed = true
 	}
 	app.Builder.ServeHTTP(w, r)
+}
+
+func (app *Application) Route(path, name string, methods []string) error {
+	return app.Router.Route(path, name, app.context, methods)
+}
+
+func (app *Application) Mount(prefix, name string, fragment *Fragment) error {
+	return fragment.Register(app, prefix, name)
 }
 
 func (app *Application) Recover() {
