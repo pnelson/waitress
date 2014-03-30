@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 )
@@ -101,9 +103,10 @@ func TestAdapterMatchErrors(t *testing.T) {
 		path   string
 
 		// out
-		err error
+		status int
 	}{
-		{"GET", "localhost", "/b", ErrNotFound},
+		{"GET", "localhost", "/b", 404},
+		{"PUT", "localhost", "/a", 405},
 	}
 
 	r := basicAdapterSetup(t)
@@ -115,9 +118,24 @@ func TestAdapterMatchErrors(t *testing.T) {
 			continue
 		}
 
-		_, _, err := adapter.Match()
-		if err != tt.err {
-			t.Errorf("%d. adapter.Match\nhave %v\nwant %v", i, err, tt.err)
+		_, _, handler := adapter.Match()
+		if handler == nil {
+			t.Errorf("%d. unexpected error <nil>", i)
+			continue
+		}
+
+		server := httptest.NewServer(handler)
+		defer server.Close()
+
+		rv, err := http.Get(server.URL)
+		if err != nil {
+			t.Errorf("%d. unexpected error %v", i, err)
+			continue
+		}
+
+		if rv.StatusCode != tt.status {
+			t.Errorf("%d. adapter.Match\nhave %d\nwant %d",
+				i, rv.StatusCode, tt.status)
 		}
 	}
 }
