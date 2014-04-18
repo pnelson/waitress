@@ -19,20 +19,8 @@ func NewAdapter(router *Router, method, scheme, host, path, query string) *Adapt
 	return &Adapter{router, method, scheme, host, path, query}
 }
 
-func (a *Adapter) Build(method, name string, args map[string]interface{}) (string, bool) {
-	a.router.sort()
-
-	for _, rule := range a.router.names[name] {
-		if rule.buildable(method, args) {
-			rv, ok := rule.build(args)
-			if !ok {
-				continue
-			}
-			return rv, true
-		}
-	}
-
-	return "", false
+func (a *Adapter) Build(method, name string) *Builder {
+	return NewBuilder(a, method, name)
 }
 
 func (a *Adapter) Dispatch(f DispatchFunc) interface{} {
@@ -72,4 +60,21 @@ func (a *Adapter) Match() (*Rule, map[string]interface{}, http.Handler) {
 
 	// No rule matched the request.
 	return nil, nil, a.router.NotFoundHandler()
+}
+
+func (a *Adapter) build(builder *Builder) (string, bool) {
+	a.router.sort()
+
+	for _, rule := range a.router.names[builder.name] {
+		if rule.buildable(builder.method, builder.arguments) {
+			rv, ok := rule.build(builder.arguments)
+			if !ok {
+				continue
+			}
+
+			return rv, true
+		}
+	}
+
+	return "", false
 }
