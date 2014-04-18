@@ -42,7 +42,7 @@ func (r *Router) Route(path, name string, context reflect.Type, methods []string
 	return nil
 }
 
-func (r *Router) Dispatch(w http.ResponseWriter, req *http.Request) router.DispatchFunc {
+func (r *Router) Dispatch(ctx *Context) router.DispatchFunc {
 	return func(rule *router.Rule, args map[string]interface{}) interface{} {
 		// Find the endpoint given the matched rule.
 		endpoint, ok := r.endpoints[rule]
@@ -58,13 +58,13 @@ func (r *Router) Dispatch(w http.ResponseWriter, req *http.Request) router.Dispa
 		}
 
 		// Construct the method receiver for the endpoint.
-		ctx := reflect.New(endpoint.context.Elem())
-		ctx.Elem().FieldByName("Context").Set(reflect.ValueOf(NewContext(w, req)))
+		receiver := reflect.New(endpoint.context.Elem())
+		receiver.Elem().FieldByName("Context").Set(reflect.ValueOf(ctx))
 
 		// Prepare the calling parameters.
 		// Method expressions take the receiver as the first argument.
 		params := make([]reflect.Value, len(keys)+1)
-		params[0] = ctx
+		params[0] = receiver
 		for i, key := range keys {
 			params[i+1] = reflect.ValueOf(args[key])
 		}
@@ -84,9 +84,13 @@ func (r *Router) Dispatch(w http.ResponseWriter, req *http.Request) router.Dispa
 	}
 }
 
-func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (r *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	adapter := r.BindToRequest(req)
-	rv := adapter.Dispatch(r.Dispatch(w, req))
+
+	w := NewResponseWriter(rw)
+	ctx := NewContext(w, req, adapter)
+
+	rv := adapter.Dispatch(r.Dispatch(ctx))
 
 	switch v := rv.(type) {
 	case []byte:
