@@ -189,7 +189,7 @@ func (r *Rule) compile() error {
 			parts = append(parts, part)
 			names = append(names, name)
 
-			r.arguments = append(r.arguments, segment)
+			r.arguments = append(r.arguments, name)
 			r.converters[name] = converter
 			r.trace = append(r.trace, trace{true, name})
 			r.weight += converter.Weight()
