@@ -43,7 +43,7 @@ func New(ctx interface{}) *Application {
 }
 
 func (app *Application) Dispatch(w http.ResponseWriter, r *http.Request) {
-	defer app.Recover()
+	defer app.Recover(w, r)
 	if !app.closed {
 		app.UseHandler(app.Router)
 		app.closed = true
@@ -59,9 +59,10 @@ func (app *Application) Mount(prefix, name string, fragment *Fragment) error {
 	return fragment.Register(app, prefix, name)
 }
 
-func (app *Application) Recover() {
+func (app *Application) Recover(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
-		fmt.Println("recovered from panic:", err)
+		handler := app.Router.InternalServerErrorHandler()
+		handler.ServeHTTP(w, r)
 	}
 }
 
