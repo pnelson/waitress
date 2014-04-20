@@ -14,8 +14,9 @@ type Router struct {
 }
 
 type endpoint struct {
-	context reflect.Type
-	method  reflect.Value
+	context  reflect.Type
+	method   reflect.Value
+	bindings map[string]interface{}
 }
 
 func NewRouter() *Router {
@@ -37,7 +38,11 @@ func (r *Router) Route(path, name string, context reflect.Type, methods []string
 		return nil // change
 	}
 
-	r.endpoints[rule] = &endpoint{context, method.Func}
+	r.endpoints[rule] = &endpoint{
+		context:  context,
+		method:   method.Func,
+		bindings: make(map[string]interface{}),
+	}
 
 	return nil
 }
@@ -60,6 +65,9 @@ func (r *Router) Dispatch(ctx *Context) router.DispatchFunc {
 		// Construct the method receiver for the endpoint.
 		receiver := reflect.New(endpoint.context.Elem())
 		receiver.Elem().FieldByName("Context").Set(reflect.ValueOf(ctx))
+		for name, value := range endpoint.bindings {
+			receiver.Elem().FieldByName(name).Set(reflect.ValueOf(value))
+		}
 
 		// Prepare the calling parameters.
 		// Method expressions take the receiver as the first argument.

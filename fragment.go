@@ -6,8 +6,9 @@ import (
 )
 
 type Fragment struct {
-	context reflect.Type
-	actions []func(*state) error
+	context  reflect.Type
+	actions  []func(*state) error
+	bindings map[string]interface{}
 }
 
 type state struct {
@@ -18,8 +19,13 @@ type state struct {
 
 func NewFragment(ctx interface{}) *Fragment {
 	return &Fragment{
-		context: reflect.TypeOf(ctx),
+		context:  reflect.TypeOf(ctx),
+		bindings: make(map[string]interface{}),
 	}
+}
+
+func (f *Fragment) Bind(name string, value interface{}) {
+	f.bindings[name] = value
 }
 
 func (f *Fragment) Register(app *Application, prefix, name string) error {
@@ -30,6 +36,15 @@ func (f *Fragment) Register(app *Application, prefix, name string) error {
 			return err
 		}
 	}
+
+	for _, endpoint := range app.Router.endpoints {
+		if endpoint.context == f.context {
+			for name, value := range f.bindings {
+				endpoint.bindings[name] = value
+			}
+		}
+	}
+
 	return nil
 }
 
