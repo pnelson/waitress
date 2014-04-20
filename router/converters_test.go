@@ -172,3 +172,65 @@ func TestIntConverter(t *testing.T) {
 		}
 	}
 }
+
+func TestInt64Converter(t *testing.T) {
+	var int64ConverterTests = []struct {
+		args        cargs
+		regexp      string
+		toGoParam   string
+		toGoResult  int64
+		toUrlParam  int64
+		toUrlResult string
+	}{
+		{cargs{}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"digits": "2"}, `\d+`, "44", 44, 44, "44"},
+		{cargs{"digits": "2"}, `\d+`, "04", 4, 4, "04"},
+		{cargs{"digits": "2"}, `\d+`, "4", -1, 4, "04"},
+		{cargs{"min": "3"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "4"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "5"}, `\d+`, "4", -1, 4, "4"},
+		{cargs{"max": "5"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"max": "4"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"max": "3"}, `\d+`, "4", -1, 4, "4"},
+		{cargs{"min": "3", "max": "5"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "4", "max": "5"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "5", "max": "5"}, `\d+`, "4", -1, 4, "4"},
+		{cargs{"min": "3", "max": "5"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "3", "max": "4"}, `\d+`, "4", 4, 4, "4"},
+		{cargs{"min": "3", "max": "3"}, `\d+`, "4", -1, 4, "4"},
+		{cargs{"digits": "2", "min": "3", "max": "4"}, `\d+`, "04", 4, 4, "04"},
+		{cargs{"digits": "2", "min": "3", "max": "4"}, `\d+`, "05", -1, 5, "05"},
+	}
+
+	for _, tt := range int64ConverterTests {
+		c := NewInt64Converter(tt.args)
+		if _, ok := c.(*Int64Converter); !ok {
+			t.Errorf("NewInt64Converter(%v) got <nil>", tt.args)
+			continue
+		}
+
+		if regexp := c.Regexp(); regexp != tt.regexp {
+			t.Errorf("Int64Converter regexp\nhave `%v`\nwant `%v`", regexp, tt.regexp)
+		}
+
+		toGoResult, err := c.ToGo(tt.toGoParam)
+		if err != nil && tt.toGoResult != -1 {
+			t.Errorf("Int64Converter ToGo(%q) unexpected error: %v",
+				tt.toGoParam, err)
+		}
+		if toGoResult != tt.toGoResult {
+			t.Errorf("Int64Converter ToGo(%q)\nhave %v\nwant %v",
+				tt.toGoParam, toGoResult, tt.toGoResult)
+		}
+
+		toUrlResult, err := c.ToUrl(tt.toUrlParam)
+		if err != nil {
+			t.Errorf("Int64Converter ToUrl(%v) unexpected error: %v",
+				tt.toUrlParam, err)
+		}
+		if toUrlResult != tt.toUrlResult {
+			t.Errorf("Int64Converter ToUrl(%v)\nhave %v\nwant %v",
+				tt.toUrlParam, toUrlResult, tt.toUrlResult)
+		}
+	}
+}

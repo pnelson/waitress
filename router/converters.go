@@ -41,6 +41,13 @@ type IntConverter struct {
 	max    int // The maximum value of the integer.
 }
 
+type Int64Converter struct {
+	BaseConverter
+	digits int64 // The number of fixed digits.
+	min    int64 // The minimum value of the integer.
+	max    int64 // The maximum value of the integer.
+}
+
 func NewStringConverter(args map[string]string) Converter {
 	var minLength string
 
@@ -99,6 +106,19 @@ func NewIntConverter(args map[string]string) Converter {
 	}
 }
 
+func NewInt64Converter(args map[string]string) Converter {
+	intArgs, err := mapAtoi64(args)
+	if err != nil {
+		return nil
+	}
+	return &Int64Converter{
+		BaseConverter{`\d+`, 50},
+		intArgs["digits"],
+		intArgs["min"],
+		intArgs["max"],
+	}
+}
+
 func (c *BaseConverter) Regexp() string {
 	return c.regexp
 }
@@ -146,11 +166,54 @@ func (c *IntConverter) ToUrl(value interface{}) (string, error) {
 	return rv, nil
 }
 
+func (c *Int64Converter) ToGo(value string) (interface{}, error) {
+	if c.digits != 0 && int64(len(value)) != c.digits {
+		return int64(-1), errors.New("unmatched digits")
+	}
+
+	rv, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return int64(-1), err
+	}
+
+	if c.min != 0 && rv < c.min || c.max != 0 && rv > c.max {
+		return int64(-1), errors.New("not within range")
+	}
+
+	return rv, nil
+}
+
+func (c *Int64Converter) ToUrl(value interface{}) (string, error) {
+	intValue, ok := value.(int64)
+	if !ok {
+		return "", errors.New("not a number")
+	}
+
+	rv := strconv.FormatInt(intValue, 10)
+	if c.digits != 0 {
+		rv = fmt.Sprintf(fmt.Sprintf("%%0%ds", c.digits), rv)
+	}
+
+	return rv, nil
+}
+
 func mapAtoi(args map[string]string) (map[string]int, error) {
 	var err error
 	rv := make(map[string]int)
 	for k, v := range args {
 		rv[k], err = strconv.Atoi(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return rv, nil
+}
+
+func mapAtoi64(args map[string]string) (map[string]int64, error) {
+	var err error
+	rv := make(map[string]int64)
+	for k, v := range args {
+		rv[k], err = strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			return nil, err
 		}

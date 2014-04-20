@@ -31,7 +31,7 @@ func New() *Router {
 			"string":  NewStringConverter,
 			"path":    NewPathConverter,
 			"any":     NewAnyConverter,
-			"int":     NewIntConverter,
+			"int":     NewInt64Converter,
 		},
 
 		RedirectHandler:            Redirect,
