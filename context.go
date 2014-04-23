@@ -3,6 +3,7 @@ package waitress
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/pnelson/waitress/router"
 )
@@ -91,6 +92,25 @@ func (ctx *Context) EncodeJSON(i interface{}) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func (ctx *Context) QueryInt(key string, def int64, base, size int) (int64, error) {
+	query := ctx.Request.URL.Query()
+	value := query.Get(key)
+	if value == "" {
+		return def, nil
+	}
+
+	rv, err := strconv.ParseInt(value, base, size)
+	if err != nil {
+		return def, err
+	}
+
+	return rv, nil
+}
+
+func (ctx *Context) QueryInt64(key string, def int64) (int64, error) {
+	return ctx.QueryInt(key, def, 10, 64)
 }
 
 func (ctx *Context) WriteJSON(b []byte) http.Handler {
