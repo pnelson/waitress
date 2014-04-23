@@ -2,6 +2,7 @@ package waitress
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"reflect"
 
@@ -61,6 +62,7 @@ func (app *Application) Mount(prefix, name string, fragment *Fragment) error {
 
 func (app *Application) Recover(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
+		log.Println(err)
 		handler := app.InternalServerErrorHandler()
 		handler.ServeHTTP(w, r)
 	}
