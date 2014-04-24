@@ -1,5 +1,9 @@
 package router
 
+import (
+	"net/url"
+)
+
 type Builder struct {
 	adapter   *Adapter
 	method    string
@@ -16,14 +20,17 @@ func NewBuilder(adapter *Adapter, method string, name string) *Builder {
 	}
 }
 
-// Path returns the path?query portion of the URL.
-func (b *Builder) Path() (string, bool) {
-	return b.adapter.build(b)
-}
+// Build attempts to return a populated url.URL from the bound Adapter.
+func (b *Builder) Build() (*url.URL, bool) {
+	rv, ok := b.adapter.build(b)
+	if !ok {
+		return &url.URL{}, false
+	}
 
-// Full returns the fully qualified URL.
-func (b *Builder) Full() (string, bool) {
-	return b.adapter.build(b)
+	rv.Scheme = b.adapter.scheme
+	rv.Host = b.adapter.host
+
+	return rv, true
 }
 
 // Get gets the value associated with key.

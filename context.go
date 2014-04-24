@@ -127,12 +127,12 @@ func (ctx *Context) Redirect(builder *router.Builder) http.Handler {
 }
 
 func (ctx *Context) RedirectWithCode(builder *router.Builder, code int) http.Handler {
-	path, ok := builder.Full()
+	url, ok := builder.Build()
 	if !ok {
 		return ctx.Abort(500)
 	}
 
-	return ctx.RedirectToWithCode(path, code)
+	return ctx.RedirectToWithCode(url.String(), code)
 }
 
 func (ctx *Context) RedirectTo(path string) http.Handler {

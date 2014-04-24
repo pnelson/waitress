@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"net/url"
 )
 
 type Adapter struct {
@@ -62,7 +63,7 @@ func (a *Adapter) Match() (*Rule, map[string]interface{}, http.Handler) {
 	return nil, nil, a.router.NotFoundHandler()
 }
 
-func (a *Adapter) build(builder *Builder) (string, bool) {
+func (a *Adapter) build(builder *Builder) (*url.URL, bool) {
 	a.router.sort()
 
 	for _, rule := range a.router.names[builder.name] {
@@ -76,5 +77,5 @@ func (a *Adapter) build(builder *Builder) (string, bool) {
 		}
 	}
 
-	return "", false
+	return &url.URL{}, false
 }

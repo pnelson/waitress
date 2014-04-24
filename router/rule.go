@@ -105,14 +105,14 @@ func (r *Rule) bind(router *Router) error {
 	return r.compile()
 }
 
-func (r *Rule) build(args map[string]interface{}) (string, bool) {
+func (r *Rule) build(args map[string]interface{}) (*url.URL, bool) {
 	parts := []string{}
 	processed := []string{}
 	for _, trace := range r.trace {
 		if trace.param {
 			part, err := r.converters[trace.part].ToUrl(args[trace.part])
 			if err != nil {
-				return "", false
+				return &url.URL{}, false
 			}
 			parts = append(parts, part)
 			processed = append(processed, trace.part)
@@ -130,11 +130,11 @@ func (r *Rule) build(args map[string]interface{}) (string, bool) {
 		q.Set(k, fmt.Sprintf("%v", v))
 	}
 
-	url := &url.URL{}
-	url.Path = fmt.Sprintf("/%s", strings.Join(parts, "/"))
-	url.RawQuery = q.Encode()
+	rv := &url.URL{}
+	rv.Path = fmt.Sprintf("/%s", strings.Join(parts, "/"))
+	rv.RawQuery = q.Encode()
 
-	return url.RequestURI(), true
+	return rv, true
 }
 
 func (r *Rule) buildable(method string, args map[string]interface{}) bool {
