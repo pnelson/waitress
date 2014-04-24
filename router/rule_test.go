@@ -227,7 +227,8 @@ func TestRuleBuild(t *testing.T) {
 			continue
 		}
 
-		out, ok := rule.build(tt.args)
+		url, ok := rule.build(tt.args)
+		out := url.String()
 		if !ok || out != tt.out {
 			t.Errorf("%d. rule.build(%v)\nhave %q, %t\nwant %q, %t",
 				i, tt.args, out, ok, tt.out, true)
