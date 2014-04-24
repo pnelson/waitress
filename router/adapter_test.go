@@ -71,7 +71,7 @@ func TestAdapterMatchArgs(t *testing.T) {
 		{"GET", "localhost", "/a/foo/bar", args{"foo": "foo", "bar": "bar"}},
 		{"GET", "localhost", "/a/foo/bar/qux", args{"foo": "foo", "bar": "bar/qux"}},
 		{"GET", "localhost", "/a/foo/bar/baz", args{"foo": "foo", "bar": "bar"}},
-		{"GET", "localhost", "/a/4", args{"foo": 4}},
+		{"GET", "localhost", "/a/4", args{"foo": int64(4)}},
 	}
 
 	r := basicAdapterSetup(t)

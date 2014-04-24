@@ -169,7 +169,7 @@ func TestRuleMatch(t *testing.T) {
 	}{
 		{`/`, "/", args{}},
 		{`/<foo>`, "/bar", args{"foo": "bar"}},
-		{`/<foo:int>`, "/4", args{"foo": 4}},
+		{`/<foo:int>`, "/4", args{"foo": int64(4)}},
 		{`/<foo>/<bar>`, "/bar/baz", args{"foo": "bar", "bar": "baz"}},
 		{`/<foo>/bar`, "/foo/bar", args{"foo": "foo"}},
 	}
@@ -208,9 +208,9 @@ func TestRuleBuild(t *testing.T) {
 	}{
 		{`/`, args{}, "/"},
 		{`/foo`, args{}, "/foo"},
-		{`/foo`, args{"bar": "bar", "baz": 4}, "/foo?bar=bar&baz=4"},
-		{`/foo/<bar>`, args{"bar": "bar", "baz": 4}, "/foo/bar?baz=4"},
-		{`/foo/<bar:int(digits=3)>`, args{"bar": 4}, "/foo/004"},
+		{`/foo`, args{"bar": "bar", "baz": int64(4)}, "/foo?bar=bar&baz=4"},
+		{`/foo/<bar>`, args{"bar": "bar", "baz": int64(4)}, "/foo/bar?baz=4"},
+		{`/foo/<bar:int(digits=3)>`, args{"bar": int64(4)}, "/foo/004"},
 	}
 
 	router := New()
