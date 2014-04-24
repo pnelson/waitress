@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"runtime/debug"
 
 	"github.com/pnelson/waitress/middleware"
 )
@@ -63,6 +64,7 @@ func (app *Application) Mount(prefix, name string, fragment *Fragment) error {
 func (app *Application) Recover(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
 		log.Println(err)
+		debug.PrintStack()
 		handler := app.InternalServerErrorHandler()
 		handler.ServeHTTP(w, r)
 	}
