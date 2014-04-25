@@ -5,6 +5,7 @@ import (
 	"net/url"
 )
 
+// An Adapter performs URL matching and building on a Router.
 type Adapter struct {
 	router *Router
 	method string
@@ -14,16 +15,23 @@ type Adapter struct {
 	query  string
 }
 
+// DispatchFunc is a function that will be called when a rule is matched.
 type DispatchFunc func(*Rule, map[string]interface{}) interface{}
 
+// NewAdapter returns a new Adapter bound to the provided URL parts.
 func NewAdapter(router *Router, method, scheme, host, path, query string) *Adapter {
 	return &Adapter{router, method, scheme, host, path, query}
 }
 
+// Build returns a new Builder.
 func (a *Adapter) Build(method, name string) *Builder {
 	return NewBuilder(a, method, name)
 }
 
+// Dispatch will attempt to find a rule that matches the Adapter parts. If a
+// match is found, the DispatchFunc will be called and the result will be
+// returned. Otherwise, the match will return an appropriate http.Handler for
+// the error it encountered.
 func (a *Adapter) Dispatch(f DispatchFunc) interface{} {
 	rule, args, err := a.Match()
 	if err != nil {
@@ -32,6 +40,10 @@ func (a *Adapter) Dispatch(f DispatchFunc) interface{} {
 	return f(rule, args)
 }
 
+// Match attempts to match the Adapter parts to a Rule on the Router. If a path
+// match is found but the methods do not match, the MethodNotAllowedHandler,
+// bound to the provided methods, will be returned as an error. If no match is
+// found at all, the NotFoundHandler will be returned as an error.
 func (a *Adapter) Match() (*Rule, map[string]interface{}, http.Handler) {
 	a.router.sort()
 
@@ -63,6 +75,7 @@ func (a *Adapter) Match() (*Rule, map[string]interface{}, http.Handler) {
 	return nil, nil, a.router.NotFoundHandler()
 }
 
+// build constructs a url.URL from the provided builder.
 func (a *Adapter) build(builder *Builder) (*url.URL, bool) {
 	a.router.sort()
 

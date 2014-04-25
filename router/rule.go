@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// A Rule represents a single URL pattern.
 type Rule struct {
 	router     *Router
 	path       string
@@ -44,6 +45,8 @@ var (
 	ErrMatch = errors.New("path did not match rule")
 )
 
+// NewRule returns a new Rule. The provided path must begin with a leeding
+// slash. The slice of methods will be sanitized.
 func NewRule(path, name string, methods []string) (*Rule, error) {
 	// Ensure that the path begins with a leading slash.
 	if path == "" || path[0] != '/' {
@@ -79,15 +82,18 @@ func NewRule(path, name string, methods []string) (*Rule, error) {
 	return rule, nil
 }
 
+// Defaults assigns a map of default arguments to be used for rule building.
 func (r *Rule) Defaults(args map[string]interface{}) *Rule {
 	r.defaults = args
 	return r
 }
 
+// Parameters returns the built regexp group names.
 func (r *Rule) Parameters() []string {
 	return r.regexp.SubexpNames()[1:]
 }
 
+// allowed returns true if the provided method is configured to be allowed.
 func (r *Rule) allowed(method string) bool {
 	for _, m := range r.methods {
 		if m == method {
@@ -97,6 +103,7 @@ func (r *Rule) allowed(method string) bool {
 	return false
 }
 
+// bind will bind the rule to the provided router and compile the regexp.
 func (r *Rule) bind(router *Router) error {
 	if r.router != nil {
 		return ErrBound
@@ -105,6 +112,7 @@ func (r *Rule) bind(router *Router) error {
 	return r.compile()
 }
 
+// build constructs a url.URL from the rule and the provided arguments.
 func (r *Rule) build(args map[string]interface{}) (*url.URL, bool) {
 	parts := []string{}
 	processed := []string{}
@@ -137,6 +145,7 @@ func (r *Rule) build(args map[string]interface{}) (*url.URL, bool) {
 	return rv, true
 }
 
+// buildable returns true if the rule is able to be built.
 func (r *Rule) buildable(method string, args map[string]interface{}) bool {
 	// Unable to build rule if the method does not match.
 	if !r.allowed(method) {
@@ -164,6 +173,9 @@ func (r *Rule) buildable(method string, args map[string]interface{}) bool {
 	return true
 }
 
+// compile will parse the rule path into a regular expression and record the
+// arguments and converts along the way so that it can be matched and built
+// from later.
 func (r *Rule) compile() error {
 	var parts []string
 	var names []string
@@ -210,6 +222,7 @@ func (r *Rule) compile() error {
 	return nil
 }
 
+// match will return the matched arguments converted by the rule's converters.
 func (r *Rule) match(path string) (map[string]interface{}, error) {
 	var err error
 	rv := make(map[string]interface{})
@@ -233,6 +246,8 @@ func (r *Rule) match(path string) (map[string]interface{}, error) {
 	return rv, nil
 }
 
+// parseParam returns the variable name and a new instance of a converter.
+//
 // Valid parameters are in the form:
 //   <var>
 //   <var:converter>
@@ -266,6 +281,8 @@ func (r *Rule) parseParam(param string) (string, Converter, error) {
 	return parts[0], converter(args), nil
 }
 
+// parseConverter parses the converter portion of a URL param and returns the
+// converter name and arguments necessary to construct a new converter.
 func (r *Rule) parseConverter(converter string) (string, map[string]string, error) {
 	parts := strings.SplitN(converter, "(", 2)
 	if len(parts) == 1 {
@@ -292,6 +309,7 @@ func (r *Rule) parseConverter(converter string) (string, map[string]string, erro
 	return name, args, nil
 }
 
+// parseArguments parses the arguments portion of a converter.
 func (r *Rule) parseArguments(arguments string) (map[string]string, error) {
 	args := make(map[string]string)
 	if arguments == "" {
@@ -316,6 +334,7 @@ func (r *Rule) parseArguments(arguments string) (map[string]string, error) {
 	return args, nil
 }
 
+// String is implemented for debugging purposes.
 func (r *Rule) String() string {
 	bound := "unbound"
 	if r.router != nil {
@@ -324,6 +343,7 @@ func (r *Rule) String() string {
 	return fmt.Sprintf("<Rule (%s) path:`%s`>", bound, r.path)
 }
 
+// splitPath will break the provided path into a slice without the slashes.
 func splitPath(path string) []string {
 	parts := strings.Split(path, "/")
 	if parts[0] == "" {

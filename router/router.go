@@ -1,3 +1,17 @@
+/*
+Package router implements a flexible HTTP routing package.
+
+This package was originally inspired by the Werkzeug router. It certainly lacks
+a lot of the features and functionality but does provide some nice abstractions
+over the DefaultServeMux provided by the Go standard library.
+
+The biggest differentiator between this package and any other Go routing
+pacakges that I have seen are the Converters. Most commonly, this is used to
+convert integer identification numbers in the URL into an int or int64. This is
+useful on its own but the power lies in the flexibility this provides. This
+package ships with a number of common converters and you can always build your
+own custom converters.
+*/
 package router
 
 import (
@@ -6,13 +20,18 @@ import (
 	"sort"
 )
 
+// A Router stores all of the rules and configuration.
 type Router struct {
 	// Map of variable converters available for use in rule paths.
 	Converters map[string]NewConverter
 
-	RedirectHandler            func(string, int) http.Handler
-	NotFoundHandler            func() http.Handler
-	MethodNotAllowedHandler    func([]string) http.Handler
+	// The handler to call when a path must be redirected.
+	RedirectHandler func(string, int) http.Handler
+	// The handler to call when a path is not matched.
+	NotFoundHandler func() http.Handler
+	// The handler to call when a path is matched but the HTTP method is not.
+	MethodNotAllowedHandler func([]string) http.Handler
+	// The handler to call when all hell when something terrible happens.
 	InternalServerErrorHandler func() http.Handler
 
 	rules  []*Rule // The sequence of rules for this router.
@@ -21,9 +40,11 @@ type Router struct {
 	names map[string][]*Rule // Map of rules by name.
 }
 
-type sortRules []*Rule
-type sortNames []*Rule
+type sortRules []*Rule // A thin wrapper used to implement sort.Interface.
+type sortNames []*Rule // A thin wrapper used to implement sort.Interface.
 
+// New returns a new Router preconfigured with some common URL param converters
+// and sane defaults for HTTP 3xx, 404, 405, and 500 errors.
 func New() *Router {
 	return &Router{
 		Converters: map[string]NewConverter{
@@ -43,14 +64,17 @@ func New() *Router {
 	}
 }
 
+// Bind returns a new Adapter bound to the provided URL parts.
 func (r *Router) Bind(method, scheme, host, path, query string) *Adapter {
 	return NewAdapter(r, method, scheme, host, path, query)
 }
 
+// BindSimple returns a new Adapter with the minimal required parameters.
 func (r *Router) BindSimple(scheme, host string) *Adapter {
 	return r.Bind("GET", scheme, host, "", "")
 }
 
+// BindToRequest returns a new Adapter bound to the provided request.
 func (r *Router) BindToRequest(req *http.Request) *Adapter {
 	method := req.Method
 	scheme := "https"
@@ -63,6 +87,7 @@ func (r *Router) BindToRequest(req *http.Request) *Adapter {
 	return r.Bind(method, scheme, host, path, query)
 }
 
+// Rule registers a new rule bound to this router.
 func (r *Router) Rule(path, name string, methods []string) (*Rule, error) {
 	rule, err := NewRule(path, name, methods)
 	if err != nil {
@@ -74,6 +99,7 @@ func (r *Router) Rule(path, name string, methods []string) (*Rule, error) {
 	return rule, nil
 }
 
+// Mount registers another router bound to this router under some prefix.
 func (r *Router) Mount(prefix, name string, router *Router) []error {
 	var errors []error
 	for _, rule := range router.rules {
@@ -89,6 +115,7 @@ func (r *Router) Mount(prefix, name string, router *Router) []error {
 	return errors
 }
 
+// sort will sort the rules if needed.
 func (r *Router) sort() {
 	if r.sorted {
 		return
@@ -102,6 +129,7 @@ func (r *Router) sort() {
 	r.sorted = true
 }
 
+// String is implemented for debugging purposes and will print the rule map.
 func (r *Router) String() string {
 	rv := "\n"
 	for _, rule := range r.rules {

@@ -4,6 +4,7 @@ import (
 	"net/url"
 )
 
+// A Builder constructs url.URL's using an Adapter.
 type Builder struct {
 	adapter   *Adapter
 	method    string
@@ -11,6 +12,7 @@ type Builder struct {
 	arguments map[string]interface{}
 }
 
+// NewBuilder returns a new Builder.
 func NewBuilder(adapter *Adapter, method string, name string) *Builder {
 	return &Builder{
 		adapter:   adapter,
