@@ -8,17 +8,22 @@ import (
 	"github.com/pnelson/waitress/router"
 )
 
+// A Router is a wrapper over the waitress/router package.
 type Router struct {
-	*router.Router
+	*router.Router // The waitress/router Router is embedded for its methods.
+
 	endpoints map[*router.Rule]*endpoint
 }
 
+// An endpoint needs to keep track of the context it belongs to, the method it
+// will be calling, and any additional bindings to apply to the context.
 type endpoint struct {
 	context  reflect.Type
 	method   reflect.Value
 	bindings map[string]interface{}
 }
 
+// NewRouter returns a new Router.
 func NewRouter() *Router {
 	return &Router{
 		Router:    router.New(),
@@ -26,6 +31,7 @@ func NewRouter() *Router {
 	}
 }
 
+// Route registers a route by method name.
 func (r *Router) Route(path, name string, context reflect.Type, methods []string) error {
 	rule, err := r.Rule(path, name, methods)
 	if err != nil {
@@ -47,6 +53,9 @@ func (r *Router) Route(path, name string, context reflect.Type, methods []string
 	return nil
 }
 
+// Dispatch returns DispatchFunc that waitress/router expects. The DispatchFunc
+// performs route matching and constructs the context for the endpoint's method
+// receiver.
 func (r *Router) Dispatch(ctx *Context) router.DispatchFunc {
 	return func(rule *router.Rule, args map[string]interface{}) interface{} {
 		// Find the endpoint given the matched rule.
@@ -92,6 +101,11 @@ func (r *Router) Dispatch(ctx *Context) router.DispatchFunc {
 	}
 }
 
+// ServeHTTP implements the http.Handler interface. It binds the router to the
+// current request, creates the context, and dispatches to the DispatchFunc.
+// The response can be a byte slice, a string, an http.Handler, or any function
+// with the method signature of an http.HandlerFunc. If the return value is
+// anything else, the InternalServerErrorHandler will be invoked.
 func (r *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	adapter := r.BindToRequest(req)
 

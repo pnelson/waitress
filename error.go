@@ -6,17 +6,21 @@ import (
 	"strings"
 )
 
+// ErrorResponse is an error that can be written as JSON.
 type ErrorResponse struct {
 	Code    int    `json:"-"`
 	Name    string `json:"name"`
 	Message string `json:"message"`
 }
 
+// MethodNotAllowedResponse is a special ErrorResponse that provides a list of
+// allowed methods.
 type MethodNotAllowedResponse struct {
 	*ErrorResponse
 	Allowed []string
 }
 
+// HTTP 400 Bad Request
 func BadRequest() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 400,
@@ -26,6 +30,7 @@ func BadRequest() *ErrorResponse {
 	}
 }
 
+// HTTP 401 Unauthorized
 func Unauthorized() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 401,
@@ -35,6 +40,7 @@ func Unauthorized() *ErrorResponse {
 	}
 }
 
+// HTTP 403 Forbidden
 func Forbidden() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 403,
@@ -44,6 +50,7 @@ func Forbidden() *ErrorResponse {
 	}
 }
 
+// HTTP 404 Not Found
 func NotFound() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 404,
@@ -53,6 +60,7 @@ func NotFound() *ErrorResponse {
 	}
 }
 
+// HTTP 405 Method Not Allowed
 func MethodNotAllowed(allowed []string) *MethodNotAllowedResponse {
 	return &MethodNotAllowedResponse{
 		Allowed: allowed,
@@ -64,6 +72,7 @@ func MethodNotAllowed(allowed []string) *MethodNotAllowedResponse {
 	}
 }
 
+// HTTP 406 Not Acceptable
 func NotAcceptable() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 406,
@@ -74,6 +83,7 @@ func NotAcceptable() *ErrorResponse {
 	}
 }
 
+// HTTP 408 Request Timeout
 func RequestTimeout() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 408,
@@ -83,6 +93,7 @@ func RequestTimeout() *ErrorResponse {
 	}
 }
 
+// HTTP 409 Conflict
 func Conflict() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 409,
@@ -92,6 +103,7 @@ func Conflict() *ErrorResponse {
 	}
 }
 
+// HTTP 410 Gone
 func Gone() *ErrorResponse {
 	return &ErrorResponse{
 		Code:    410,
@@ -100,6 +112,7 @@ func Gone() *ErrorResponse {
 	}
 }
 
+// HTTP 411 Length Required
 func LengthRequired() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 411,
@@ -109,6 +122,7 @@ func LengthRequired() *ErrorResponse {
 	}
 }
 
+// HTTP 412 Precondition Failed
 func PreconditionFailed() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 412,
@@ -118,6 +132,7 @@ func PreconditionFailed() *ErrorResponse {
 	}
 }
 
+// HTTP 413 Request Entity Too Large
 func RequestEntityTooLarge() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 413,
@@ -127,6 +142,7 @@ func RequestEntityTooLarge() *ErrorResponse {
 	}
 }
 
+// HTTP 414 Request URI Too Long
 func RequestURITooLong() *ErrorResponse {
 	return &ErrorResponse{
 		Code:    414,
@@ -135,6 +151,7 @@ func RequestURITooLong() *ErrorResponse {
 	}
 }
 
+// HTTP 415 Unsupported Media Type
 func UnsupportedMediaType() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 415,
@@ -144,6 +161,7 @@ func UnsupportedMediaType() *ErrorResponse {
 	}
 }
 
+// HTTP 416 Requested Range Not Satisfiable
 func RequestedRangeNotSatisfiable() *ErrorResponse {
 	return &ErrorResponse{
 		Code:    416,
@@ -152,6 +170,7 @@ func RequestedRangeNotSatisfiable() *ErrorResponse {
 	}
 }
 
+// HTTP 417 Expectation Failed
 func ExpectationFailed() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 417,
@@ -161,6 +180,7 @@ func ExpectationFailed() *ErrorResponse {
 	}
 }
 
+// HTTP 422 Unprocessable Entity
 func UnprocessableEntity() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 422,
@@ -170,6 +190,7 @@ func UnprocessableEntity() *ErrorResponse {
 	}
 }
 
+// HTTP 429 Too Many Requests
 func TooManyRequests() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 429,
@@ -179,6 +200,7 @@ func TooManyRequests() *ErrorResponse {
 	}
 }
 
+// HTTP 500 Internal Server Error
 func InternalServerError() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 500,
@@ -188,6 +210,7 @@ func InternalServerError() *ErrorResponse {
 	}
 }
 
+// HTTP 501 Not Implemented
 func NotImplemented() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 501,
@@ -197,6 +220,7 @@ func NotImplemented() *ErrorResponse {
 	}
 }
 
+// HTTP 502 Bad Gateway
 func BadGateway() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 502,
@@ -206,6 +230,7 @@ func BadGateway() *ErrorResponse {
 	}
 }
 
+// HTTP 503 Service Unavailable
 func ServiceUnavailable() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 503,
@@ -215,6 +240,7 @@ func ServiceUnavailable() *ErrorResponse {
 	}
 }
 
+// HTTP 504 Gateway Timeout
 func GatewayTimeout() *ErrorResponse {
 	return &ErrorResponse{
 		Code: 504,
@@ -224,10 +250,14 @@ func GatewayTimeout() *ErrorResponse {
 	}
 }
 
+// Error implements the error interface and returns the error message.
 func (e *ErrorResponse) Error() string {
 	return e.Message
 }
 
+// Write attempts to return the appropriate error as a friendly JSON response,
+// but may fail with an HTTP 500 Internal Status Error if there was an issue
+// marshalling the JSON.
 func (e *ErrorResponse) Write(w http.ResponseWriter, body []byte, err error) {
 	if err != nil {
 		http.Error(w, "Internal Server Error", 500)
@@ -238,11 +268,13 @@ func (e *ErrorResponse) Write(w http.ResponseWriter, body []byte, err error) {
 	w.Write(body)
 }
 
+// ServeHTTP implements the http.Handler interface.
 func (e *ErrorResponse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rv, err := json.MarshalIndent(e, "", "  ")
 	e.Write(w, rv, err)
 }
 
+// ServeHTTP implements the http.Handler interface.
 func (e *MethodNotAllowedResponse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	allowed := strings.Join(e.Allowed, ", ")
 	w.Header().Set("Allow", allowed)
