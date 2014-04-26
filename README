@@ -2,3 +2,5 @@ Waitress
 ========
 
 Waitress is a web framework with a focus on embracing the Go standard library.
+
+Copyright (c) 2014 by Philip Nelson. See LICENSE for details.
