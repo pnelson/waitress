@@ -255,23 +255,17 @@ func (e *ErrorResponse) Error() string {
 	return e.Message
 }
 
-// Write attempts to return the appropriate error as a friendly JSON response,
-// but may fail with an HTTP 500 Internal Status Error if there was an issue
-// marshalling the JSON.
-func (e *ErrorResponse) Write(w http.ResponseWriter, body []byte, err error) {
+// ServeHTTP implements the http.Handler interface.
+func (e *ErrorResponse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	b, err := json.MarshalIndent(e, "", "  ")
 	if err != nil {
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(e.Code)
-	w.Write(body)
-}
-
-// ServeHTTP implements the http.Handler interface.
-func (e *ErrorResponse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	rv, err := json.MarshalIndent(e, "", "  ")
-	e.Write(w, rv, err)
+	w.Write(b)
 }
 
 // ServeHTTP implements the http.Handler interface.
